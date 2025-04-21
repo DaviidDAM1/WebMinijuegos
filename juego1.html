@@ -2,11 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Juego 1</title>
+    <title>Piedra, Papel o Tijera</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Bienvenido a Juego 1</h1>
-    <p>Aquí irá tu minijuego.</p>
+    <h1>Piedra, Papel o Tijera</h1>
+
+    <button onclick="jugar('piedra')">🪨 Piedra</button>
+    <button onclick="jugar('papel')">📄 Papel</button>
+    <button onclick="jugar('tijera')">✂️ Tijera</button>
+
+    <h2 id="resultado"></h2>
+
     <button onclick="window.location.href='menu.html'">Volver al Menú</button>
+
+    <script>
+        function jugar(eleccionJugador) {
+            const opciones = ["piedra", "papel", "tijera"];
+            const eleccionMaquina = opciones[Math.floor(Math.random() * 3)];
+
+            let resultado = "";
+
+            if (eleccionJugador === eleccionMaquina) {
+                resultado = "¡Empate! Ambos eligieron " + eleccionJugador;
+            } else if (
+                (eleccionJugador === "piedra" && eleccionMaquina === "tijera") ||
+                (eleccionJugador === "papel" && eleccionMaquina === "piedra") ||
+                (eleccionJugador === "tijera" && eleccionMaquina === "papel")
+            ) {
+                resultado = "¡Ganaste! " + eleccionJugador + " vence a " + eleccionMaquina;
+            } else {
+                resultado = "¡Perdiste! " + eleccionMaquina + " vence a " + eleccionJugador;
+            }
+
+            document.getElementById("resultado").innerText = resultado;
+        }
+    </script>
 </body>
 </html>

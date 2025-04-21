@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tres en Raya</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tablero {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+        }
+        .casilla {
+            width: 100px;
+            height: 100px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            border: 2px solid #000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tres en Raya</h1>
+
+    <div class="tablero" id="tablero">
+        <!-- 9 casillas -->
+    </div>
+
+    <h2 id="mensaje"></h2>
+
+    <button onclick="reiniciar()">Reiniciar</button>
+    <button onclick="window.location.href='menu.html'">Volver al Menú</button>
+
+    <script>
+        const tablero = document.getElementById("tablero");
+        const mensaje = document.getElementById("mensaje");
+        let turno = "X";
+        let casillas = ["", "", "", "", "", "", "", "", ""];
+
+        function dibujarTablero() {
+            tablero.innerHTML = "";
+            casillas.forEach((valor, index) => {
+                const div = document.createElement("div");
+                div.classList.add("casilla");
+                div.innerText = valor;
+                div.addEventListener("click", () => jugar(index));
+                tablero.appendChild(div);
+            });
+        }
+
+        function jugar(index) {
+            if (casillas[index] === "" && !verificarGanador()) {
+                casillas[index] = turno;
+                turno = turno === "X" ? "O" : "X";
+                dibujarTablero();
+                const ganador = verificarGanador();
+                if (ganador) {
+                    mensaje.innerText = "¡Ganó " + ganador + "!";
+                } else if (!casillas.includes("")) {
+                    mensaje.innerText = "¡Empate!";
+                }
+            }
+        }
+
+        function verificarGanador() {
+            const combinaciones = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+
+            for (let comb of combinaciones) {
+                const [a,b,c] = comb;
+                if (casillas[a] && casillas[a] === casillas[b] && casillas[a] === casillas[c]) {
+                    return casillas[a];
+                }
+            }
+            return null;
+        }
+
+        function reiniciar() {
+            casillas = ["", "", "", "", "", "", "", "", ""];
+            turno = "X";
+            mensaje.innerText = "";
+            dibujarTablero();
+        }
+
+        dibujarTablero();
+    </script>
+</body>
+</html>
