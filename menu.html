@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Menú de Minijuegos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Elige un minijuego</h1>
+    <button onclick="window.location.href='juego1.html'">Piedra, papel y tijera</button>
+    <button onclick="window.location.href='juego2.html'">Tres en raya</button>
+
+    <button onclick="cerrarSesion()">Cerrar Sesión</button>
+
+<script>
+    function cerrarSesion() {
+        localStorage.removeItem("usuario"); // Borrar el login
+        window.location.href = "login.html"; // Volver al login
+    }
+</script>
+</body>
+</html>
