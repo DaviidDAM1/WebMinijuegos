@@ -9,15 +9,24 @@
     <h1>Elige un minijuego</h1>
     <button onclick="window.location.href='juego1.html'">Piedra, papel y tijera</button>
     <button onclick="window.location.href='juego2.html'">Tres en raya
+    <button onclick="window.location.href='pong.html'">Pong
+    <button onclick="window.location.href='memoria.html'">Memoria/Parejas
+    <button onclick="window.location.href='penaltis.html'">Tanda de Penaltis ⚽</button>
+    <button onclick="window.location.href='pollo_mutante.html'">Pollo Mutante(1 jugador)
+    <button onclick="window.location.href='pollo-mutante-vs.html'">Pollo Mutante(2 jugadores) ⚡ Power Edition</button>
+
     </button>
 
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
+
+    
 
 <script>
     function cerrarSesion() {
         localStorage.removeItem("usuario"); // Borrar el login
         window.location.href = "login.html"; // Volver al login
     }
+    
 </script>
 </body>
 </html>

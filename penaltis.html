@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tanda de Penaltis</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(#1b5e20, #2e7d32);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+        }
+
+        .field {
+            margin: 40px auto;
+            width: 300px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .shot {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border: 4px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            color: black;
+            font-size: 1.5em;
+            line-height: 70px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .shot:hover {
+            transform: scale(1.1);
+            background: gold;
+        }
+
+        #resultado {
+            font-size: 1.8em;
+            margin-top: 20px;
+            min-height: 2em;
+        }
+
+        #marcador {
+            font-size: 1.3em;
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            background: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tanda de Penaltis</h1>
+    <div class="field">
+        <div class="shot" onclick="tirar('izq')">⬅️</div>
+        <div class="shot" onclick="tirar('centro')">⬆️</div>
+        <div class="shot" onclick="tirar('der')">➡️</div>
+    </div>
+    <div id="resultado"></div>
+    <div id="marcador">Goles: 0 / 0</div>
+    <button onclick="reiniciar()">Reiniciar</button>
+
+    <script>
+        const posiciones = ['izq', 'centro', 'der'];
+        let goles = 0;
+        let lanzamientos = 0;
+        const maxTiros = 5;
+
+        function tirar(direccion) {
+            if (lanzamientos >= maxTiros) return;
+
+            const portero = posiciones[Math.floor(Math.random() * 3)];
+            const resultado = document.getElementById("resultado");
+
+            if (direccion === portero) {
+                resultado.innerHTML = `❌ ¡PARADÓN del portero!`;
+            } else {
+                goles++;
+                resultado.innerHTML = `✅ ¡GOOOOOOL!`;
+            }
+
+            lanzamientos++;
+            document.getElementById("marcador").innerText = `Goles: ${goles} / ${lanzamientos}`;
+
+            if (lanzamientos === maxTiros) {
+                setTimeout(() => {
+                    resultado.innerHTML += `<br><strong>Tanda terminada.</strong><br>${goles >= 3 ? '¡Victoria!' : 'Inténtalo otra vez.'}`;
+                }, 800);
+            }
+        }
+
+        function reiniciar() {
+            goles = 0;
+            lanzamientos = 0;
+            document.getElementById("resultado").innerText = "";
+            document.getElementById("marcador").innerText = "Goles: 0 / 0";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Juego de Memoria</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        h1 {
+            margin: 30px 0;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 15px;
+            justify-content: center;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            border-radius: 10px;
+            user-select: none;
+        }
+
+        .card.flipped {
+            background-color: #fff;
+            color: #000;
+            cursor: default;
+        }
+
+        .card.matched {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Juego de Memoria</h1>
+
+    <div class="game-board" id="gameBoard"></div>
+
+    <div class="controls">
+        <button onclick="window.location.href='menu.html'">Volver al menú</button>
+    </div>
+
+    <script>
+        const emojis = ["🐶", "🐱", "🐸", "🐵", "🐰", "🦊", "🐼", "🐷"];
+        let cards = [...emojis, ...emojis]; // 2 de cada
+
+        let flippedCards = [];
+        let matchedCards = [];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createBoard() {
+            const board = document.getElementById("gameBoard");
+            shuffle(cards);
+
+            cards.forEach((emoji, index) => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+                card.dataset.emoji = emoji;
+                card.dataset.index = index;
+                card.innerText = "";
+
+                card.addEventListener("click", () => flipCard(card));
+
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (flippedCards.length >= 2 || card.classList.contains("flipped") || matchedCards.includes(card)) {
+                return;
+            }
+
+            card.classList.add("flipped");
+            card.innerText = card.dataset.emoji;
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                card1.classList.add("matched");
+                card2.classList.add("matched");
+                matchedCards.push(card1, card2);
+                flippedCards = [];
+
+                if (matchedCards.length === cards.length) {
+                    setTimeout(() => {
+                        alert("¡Has ganado! 🧠🎉");
+                        location.reload();
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove("flipped");
+                    card2.classList.remove("flipped");
+                    card1.innerText = "";
+                    card2.innerText = "";
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>

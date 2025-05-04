@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        canvas {
+            background: #000;
+            display: block;
+            margin: 40px auto;
+            border: 5px solid #fff;
+            border-radius: 12px;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        .controls button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pong</h1>
+
+    <canvas id="pongCanvas" width="700" height="400"></canvas>
+
+    <div class="controls">
+        <button onclick="window.location.href='menu.html'">Volver al menú</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Elementos
+        const paddleHeight = 80, paddleWidth = 10;
+        const ballRadius = 10;
+
+        let playerY = canvas.height / 2 - paddleHeight / 2;
+        let aiY = canvas.height / 2 - paddleHeight / 2;
+
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = 4;
+        let ballSpeedY = 4;
+
+        let playerScore = 0;
+        let aiScore = 0;
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawText(text, x, y) {
+            ctx.fillStyle = "#fff";
+            ctx.font = "30px Arial";
+            ctx.fillText(text, x, y);
+        }
+
+        function drawNet() {
+            for (let i = 0; i <= canvas.height; i += 20) {
+                drawRect(canvas.width / 2 - 1, i, 2, 10, "#fff");
+            }
+        }
+
+        function render() {
+            drawRect(0, 0, canvas.width, canvas.height, "#000");
+            drawNet();
+            drawText(playerScore, canvas.width / 4, 30);
+            drawText(aiScore, canvas.width * 3 / 4, 30);
+
+            drawRect(10, playerY, paddleWidth, paddleHeight, "#fff"); // Jugador
+            drawRect(canvas.width - 20, aiY, paddleWidth, paddleHeight, "#fff"); // AI
+
+            drawCircle(ballX, ballY, ballRadius, "#fff");
+        }
+
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
+        }
+
+        function update() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Rebotar en la parte superior e inferior
+            if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Movimiento AI simple
+            let aiCenter = aiY + paddleHeight / 2;
+            if (aiCenter < ballY - 35) {
+                aiY += 4;
+            } else if (aiCenter > ballY + 35) {
+                aiY -= 4;
+            }
+
+            // Colisión con jugador
+            if (
+                ballX - ballRadius < 20 &&
+                ballY > playerY &&
+                ballY < playerY + paddleHeight
+            ) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Colisión con AI
+            if (
+                ballX + ballRadius > canvas.width - 20 &&
+                ballY > aiY &&
+                ballY < aiY + paddleHeight
+            ) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Puntos
+            if (ballX - ballRadius < 0) {
+                aiScore++;
+                resetBall();
+            } else if (ballX + ballRadius > canvas.width) {
+                playerScore++;
+                resetBall();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            render();
+        }
+
+        // Control con el mouse
+        canvas.addEventListener("mousemove", function(evt) {
+            let rect = canvas.getBoundingClientRect();
+            playerY = evt.clientY - rect.top - paddleHeight / 2;
+        });
+
+        // Iniciar bucle de juego
+        setInterval(gameLoop, 1000 / 60); // 60 FPS
+    </script>
+</body>
+</html>

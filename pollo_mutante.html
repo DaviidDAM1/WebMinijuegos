@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Huye del Pollo Mutante</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #222;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+        }
+
+        #player, #pollo {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            font-size: 2em;
+            text-align: center;
+            line-height: 50px;
+        }
+
+        #player {
+            background: #4caf50;
+            left: 100px;
+            top: 100px;
+        }
+
+        #pollo {
+            background: #ff5252;
+            left: 500px;
+            top: 300px;
+        }
+
+        #game-over {
+            position: fixed;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 3em;
+            display: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="player">😎</div>
+    <div id="pollo">🐔</div>
+    <div id="game-over">
+        ¡El pollo te atrapó! 🐔💥<br>
+        <button onclick="location.reload()">Reintentar</button><br><br>
+        <button onclick="window.location.href='menu.html'">Volver al menú</button>
+    </div>
+
+    <script>
+        const player = document.getElementById("player");
+        const pollo = document.getElementById("pollo");
+        const gameOver = document.getElementById("game-over");
+
+        let playerX = 100, playerY = 100;
+        let polloX = 500, polloY = 300;
+
+        document.addEventListener("keydown", (e) => {
+            const step = 15;
+            if (e.key === "ArrowUp") playerY -= step;
+            if (e.key === "ArrowDown") playerY += step;
+            if (e.key === "ArrowLeft") playerX -= step;
+            if (e.key === "ArrowRight") playerX += step;
+
+            player.style.left = playerX + "px";
+            player.style.top = playerY + "px";
+        });
+
+        function movePollo() {
+            const dx = playerX - polloX;
+            const dy = playerY - polloY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist > 1) {
+                polloX += (dx / dist) * 2.5;
+                polloY += (dy / dist) * 2.5;
+            }
+
+            pollo.style.left = polloX + "px";
+            pollo.style.top = polloY + "px";
+
+            // Colisión
+            if (Math.abs(playerX - polloX) < 40 && Math.abs(playerY - polloY) < 40) {
+                gameOver.style.display = "block";
+                clearInterval(loop);
+            }
+        }
+
+        const loop = setInterval(movePollo, 20);
+    </script>
+</body>
+</html>
