@@ -6,18 +6,26 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(#1b5e20, #2e7d32);
+            background: url('https://i.imgur.com/vbgP4Ya.jpg') no-repeat center center/cover;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             color: white;
-            text-align: center;
-            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         h1 {
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
             font-size: 3em;
         }
 
         .field {
-            margin: 40px auto;
+            margin: 40px;
             width: 300px;
             display: flex;
             justify-content: space-around;
@@ -26,7 +34,7 @@
         .shot {
             width: 80px;
             height: 80px;
-            background: #fff;
+            background: white;
             border: 4px solid white;
             border-radius: 50%;
             cursor: pointer;
@@ -42,16 +50,26 @@
             background: gold;
         }
 
-        #resultado {
+        #resultado, #marcador {
             font-size: 1.8em;
-            margin-top: 20px;
-            min-height: 2em;
-        }
-
-        #marcador {
-            font-size: 1.3em;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 10px;
             margin-top: 10px;
         }
+
+        #portero {
+            width: 80px;
+            height: 80px;
+            font-size: 2.5em;
+            position: relative;
+            margin-top: 10px;
+            transition: transform 0.4s ease;
+        }
+
+        .move-izq { transform: translateX(-100px); }
+        .move-centro { transform: translateX(0); }
+        .move-der { transform: translateX(100px); }
 
         button {
             margin-top: 30px;
@@ -66,11 +84,15 @@
 </head>
 <body>
     <h1>Tanda de Penaltis</h1>
+
+    <div id="portero">🧤</div>
+
     <div class="field">
         <div class="shot" onclick="tirar('izq')">⬅️</div>
         <div class="shot" onclick="tirar('centro')">⬆️</div>
         <div class="shot" onclick="tirar('der')">➡️</div>
     </div>
+
     <div id="resultado"></div>
     <div id="marcador">Goles: 0 / 0</div>
     <button onclick="reiniciar()">Reiniciar</button>
@@ -80,18 +102,27 @@
         let goles = 0;
         let lanzamientos = 0;
         const maxTiros = 5;
+        const portero = document.getElementById("portero");
 
         function tirar(direccion) {
             if (lanzamientos >= maxTiros) return;
 
-            const portero = posiciones[Math.floor(Math.random() * 3)];
+            const porteroMove = posiciones[Math.floor(Math.random() * 3)];
+
+            // Reset clases
+            portero.className = '';
+            void portero.offsetWidth; // truco para reiniciar animación
+
+            // Mover portero
+            portero.classList.add("move-" + porteroMove);
+
             const resultado = document.getElementById("resultado");
 
-            if (direccion === portero) {
-                resultado.innerHTML = `❌ ¡PARADÓN del portero!`;
+            if (direccion === porteroMove) {
+                resultado.innerHTML = `❌ ¡PARADÓN del portero hacia la ${direccion}!`;
             } else {
                 goles++;
-                resultado.innerHTML = `✅ ¡GOOOOOOL!`;
+                resultado.innerHTML = `✅ ¡GOOOOL por la ${direccion}!`;
             }
 
             lanzamientos++;
@@ -109,7 +140,9 @@
             lanzamientos = 0;
             document.getElementById("resultado").innerText = "";
             document.getElementById("marcador").innerText = "Goles: 0 / 0";
+            portero.className = '';
         }
     </script>
 </body>
 </html>
+
