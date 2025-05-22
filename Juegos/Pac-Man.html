@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Pac-Man</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      color: white;
+      font-family: sans-serif;
+    }
+    canvas {
+      border: 3px solid #fff;
+      background: #111;
+    }
+    #gameOverScreen {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+    #gameOverScreen button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <div id="gameOverScreen">
+    <h2 id="gameOverMessage"></h2>
+    <button id="restartBtn">Reiniciar Juego</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 20;
+
+    const mapTemplate = [
+      "####################",
+      "#........##........#",
+      "#.####.#.##.#.####.#",
+      "#.#  #.#....#.##  #.#",
+      "#.####.######.####.#",
+      "#....F........F....#",
+      "#.####.######.####.#",
+      "#....#........#....#",
+      "####.#.######.#.####",
+      "#........P.........#",
+      "####################",
+    ];
+
+    let map = [];
+    let pacman;
+    let enemies;
+    let score;
+    let moveRequested;
+    let gameOver;
+    let gameWon;
+
+    // Variables para controlar la velocidad de los enemigos
+    let enemyMoveCounter = 0;
+    const enemyMoveDelay = 20; // Ajusta este número para ralentizar/frenar más los enemigos (mayor es más lento)
+
+    function resetGame() {
+      map = mapTemplate.map(row => row.slice());
+      pacman = { x: 9, y: 9, dx: 0, dy: 0 };
+      enemies = [
+        { x: 1, y: 1, dx: 1, dy: 0, color: "red" },
+        { x: 18, y: 8, dx: -1, dy: 0, color: "pink" },
+      ];
+      score = 0;
+      moveRequested = false;
+      gameOver = false;
+      gameWon = false;
+      enemyMoveCounter = 0;
+      document.getElementById("gameOverScreen").style.display = "none";
+    }
+
+    resetGame();
+
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          const cell = map[y][x];
+          const px = x * gridSize;
+          const py = y * gridSize;
+
+          if (cell === "#") {
+            ctx.fillStyle = "blue";
+            ctx.fillRect(px, py, gridSize, gridSize);
+          } else if (cell === ".") {
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(px + gridSize / 2, py + gridSize / 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (cell === "F") {
+            ctx.fillStyle = "orange";
+            ctx.beginPath();
+            ctx.arc(px + gridSize / 2, py + gridSize / 2, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    function drawPacman() {
+      ctx.fillStyle = "yellow";
+      ctx.beginPath();
+      ctx.arc(
+        pacman.x * gridSize + gridSize / 2,
+        pacman.y * gridSize + gridSize / 2,
+        gridSize / 2 - 2,
+        0.25 * Math.PI,
+        1.75 * Math.PI
+      );
+      ctx.lineTo(pacman.x * gridSize + gridSize / 2, pacman.y * gridSize + gridSize / 2);
+      ctx.fill();
+    }
+
+    function drawEnemies() {
+  enemies.forEach((e) => {
+    const x = e.x * gridSize;
+    const y = e.y * gridSize;
+
+    // Cuerpo fantasma
+    ctx.fillStyle = e.color;
+    ctx.beginPath();
+    ctx.moveTo(x, y + gridSize);
+    ctx.lineTo(x, y + gridSize / 3);
+    ctx.quadraticCurveTo(x + gridSize / 2, y, x + gridSize, y + gridSize / 3);
+    ctx.lineTo(x + gridSize, y + gridSize);
+    // Zigzag inferior (3 picos)
+    const zigzagHeight = gridSize / 4;
+    const zigzagCount = 3;
+    const zigzagWidth = gridSize / zigzagCount;
+    for (let i = 0; i < zigzagCount; i++) {
+      const zx = x + i * zigzagWidth;
+      ctx.lineTo(zx + zigzagWidth / 2, y + gridSize - zigzagHeight);
+      ctx.lineTo(zx + zigzagWidth, y + gridSize);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Ojos
+    const eyeRadius = gridSize / 6;
+    const pupilRadius = eyeRadius / 2;
+    const eyeYOffset = gridSize / 4;
+    const eyeXOffset = gridSize / 4;
+
+    // Ojo izquierdo
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.ellipse(x + eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.ellipse(x + eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ojo derecho
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.ellipse(x + gridSize - eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.ellipse(x + gridSize - eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+
+    function moveEnemies() {
+      enemyMoveCounter++;
+      if (enemyMoveCounter < enemyMoveDelay) return; // Solo moverse cada cierto número de frames
+      enemyMoveCounter = 0;
+
+      enemies.forEach((e) => {
+        let nextX = e.x + e.dx;
+        let nextY = e.y + e.dy;
+
+        if (map[nextY][nextX] === "#") {
+          // Cambiar dirección aleatoria en eje x o y
+          if (Math.random() < 0.5) {
+            e.dx = Math.round(Math.random()) * 2 - 1;
+            e.dy = 0;
+          } else {
+            e.dx = 0;
+            e.dy = Math.round(Math.random()) * 2 - 1;
+          }
+          nextX = e.x + e.dx;
+          nextY = e.y + e.dy;
+        }
+
+        if (map[nextY][nextX] !== "#") {
+          e.x = nextX;
+          e.y = nextY;
+        }
+      });
+    }
+
+    function checkCollisions() {
+      enemies.forEach((e) => {
+        if (e.x === pacman.x && e.y === pacman.y) {
+          gameOver = true;
+        }
+      });
+    }
+
+    function checkWinCondition() {
+      // Ganar si no quedan puntos ni frutas ('.' ni 'F')
+      for (const row of map) {
+        if (row.includes(".") || row.includes("F")) return false;
+      }
+      gameWon = true;
+      return true;
+    }
+
+    function update() {
+      if (gameOver || gameWon) return;
+
+      if (moveRequested) {
+        const nextX = pacman.x + pacman.dx;
+        const nextY = pacman.y + pacman.dy;
+        if (map[nextY][nextX] !== "#") {
+          const targetCell = map[nextY][nextX];
+          if (targetCell === "." || targetCell === "F") {
+            if (targetCell === ".") score++;
+            if (targetCell === "F") score += 10;
+            map[nextY] = map[nextY].substring(0, nextX) + " " + map[nextY].substring(nextX + 1);
+          }
+          pacman.x = nextX;
+          pacman.y = nextY;
+        }
+        moveRequested = false;
+      }
+
+      moveEnemies();
+      checkCollisions();
+      checkWinCondition();
+    }
+
+    function gameLoop() {
+      update();
+      drawMap();
+      drawPacman();
+      drawEnemies();
+
+      ctx.fillStyle = "white";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("Puntos: " + score, 10, canvas.height - 10);
+
+      if (gameOver) {
+        showGameOverScreen("¡Has perdido!");
+        return;
+      }
+      if (gameWon) {
+        showGameOverScreen("¡Has ganado!");
+        return;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function showGameOverScreen(message) {
+      const screen = document.getElementById("gameOverScreen");
+      document.getElementById("gameOverMessage").innerText = message;
+      screen.style.display = "block";
+    }
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      resetGame();
+      gameLoop();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (gameOver || gameWon) return; // No moverse si terminó
+      if (e.key === "ArrowUp") {
+        pacman.dx = 0;
+        pacman.dy = -1;
+        moveRequested = true;
+      }
+      if (e.key === "ArrowDown") {
+        pacman.dx = 0;
+        pacman.dy = 1;
+        moveRequested = true;
+      }
+      if (e.key === "ArrowLeft") {
+        pacman.dx = -1;
+        pacman.dy = 0;
+        moveRequested = true;
+      }
+      if (e.key === "ArrowRight") {
+        pacman.dx = 1;
+        pacman.dy = 0;
+        moveRequested = true;
+      }
+    });
+
+    gameLoop();
+  </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Geometry Dash</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #111; }
+    canvas { background: #222; border: 3px solid #fff; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Jugador
+    const player = {
+      x: 50,
+      y: 300,
+      width: 30,
+      height: 30,
+      dy: 0,
+      gravity: 0.8,
+      jumpForce: -12,
+      isJumping: false
+    };
+
+    // Obstáculos
+    const obstacles = [];
+    const obstacleTypes = ["block", "spike", "floating"];
+    const obstacleSpeed = 6;
+    let spawnTimer = 0;
+
+    let gameOver = false;
+
+    function spawnObstacle() {
+      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+
+      if (type === "block") {
+        obstacles.push({
+          type: "block",
+          x: canvas.width,
+          y: canvas.height - 40,
+          width: 30,
+          height: 40,
+        });
+      } else if (type === "spike") {
+        obstacles.push({
+          type: "spike",
+          x: canvas.width,
+          y: canvas.height - 30,
+          width: 30,
+          height: 30,
+        });
+      } else if (type === "floating") {
+        obstacles.push({
+          type: "floating",
+          x: canvas.width,
+          y: canvas.height - 120,
+          width: 60,
+          height: 20,
+        });
+      }
+    }
+
+    function resetGame() {
+      obstacles.length = 0;
+      player.y = 300;
+      player.dy = 0;
+      gameOver = false;
+      spawnTimer = 0;
+      loop();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Jugador
+      ctx.fillStyle = "cyan";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Obstáculos
+      obstacles.forEach(ob => {
+        if (ob.type === "block") {
+          ctx.fillStyle = "red";
+          ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+        } else if (ob.type === "spike") {
+          ctx.fillStyle = "orange";
+          ctx.beginPath();
+          ctx.moveTo(ob.x, ob.y + ob.height);
+          ctx.lineTo(ob.x + ob.width / 2, ob.y);
+          ctx.lineTo(ob.x + ob.width, ob.y + ob.height);
+          ctx.closePath();
+          ctx.fill();
+        } else if (ob.type === "floating") {
+          ctx.fillStyle = "purple";
+          ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+        }
+      });
+    }
+
+    function update() {
+      // Movimiento del jugador
+      player.dy += player.gravity;
+      player.y += player.dy;
+
+      // Evita que caiga del suelo
+      if (player.y + player.height >= canvas.height) {
+        player.y = canvas.height - player.height;
+        player.dy = 0;
+        player.isJumping = false;
+      }
+
+      // Spawnear obstáculos
+      spawnTimer++;
+      if (spawnTimer > 80) {
+        spawnObstacle();
+        spawnTimer = 0;
+      }
+
+      obstacles.forEach((ob, i) => {
+        ob.x -= obstacleSpeed;
+
+        // Colisión (simple AABB)
+        if (
+          player.x < ob.x + ob.width &&
+          player.x + player.width > ob.x &&
+          player.y < ob.y + ob.height &&
+          player.y + player.height > ob.y
+        ) {
+          gameOver = true;
+        }
+
+        // Quitar obstáculos fuera de pantalla
+        if (ob.x + ob.width < 0) {
+          obstacles.splice(i, 1);
+        }
+      });
+    }
+
+    function loop() {
+      if (!gameOver) {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.font = "40px sans-serif";
+        ctx.fillText("Game Over", 300, 200);
+        ctx.font = "20px sans-serif";
+        ctx.fillText("Presiona espacio para reiniciar", 260, 240);
+      }
+    }
+
+    // Controles
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        if (gameOver) {
+          resetGame();
+        } else if (!player.isJumping) {
+          player.dy = player.jumpForce;
+          player.isJumping = true;
+        }
+      }
+    });
+
+    loop();
+  </script>
+</body>
+</html>

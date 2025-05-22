@@ -1,32 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Menú de Minijuegos</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Menú de Minijuegos</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  body {
+    background: #000;
+    background-image:
+      linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    color: #0ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    position: relative;
+    padding-top: 60px;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 40px;
+    font-size: 2.4em;
+    text-shadow: 0 0 8px #0ff;
+  }
+
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    padding: 60px;
+    background-color: rgba(0, 255, 255, 0.05);
+    border: 2px solid #0ff;
+    border-radius: 20px;
+    box-shadow: 0 0 15px #0ff;
+    width: 80%;
+    max-width: 1200px;
+  }
+
+  .buttons button {
+    flex: 1 1 250px;
+    padding: 30px;
+    font-size: 22px;
+    color: #000;
+    background: #0ff;
+    border: 2px solid #0ff;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 8px #0ff, 0 0 15px #0ff inset;
+  }
+
+  .buttons button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 20px #0ff, 0 0 35px #0ff;
+  }
+
+  .logout {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 18px 36px;
+    font-size: 18px;
+    color: #fff;
+    background: #ff0044;
+    border: 2px solid #ff0044;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 8px #ff0044, 0 0 15px #ff0044 inset;
+    z-index: 999;
+  }
+
+  .logout:hover {
+    transform: scale(1.07);
+    box-shadow: 0 0 15px #ff0044, 0 0 30px #ff0044;
+  }
+</style>
+
 </head>
 <body>
-    <h1>Elige un minijuego</h1>
-    <button onclick="window.location.href='juego1.html'">Piedra, papel y tijera</button>
-    <button onclick="window.location.href='juego2.html'">Tres en raya
-    <button onclick="window.location.href='pong.html'">Pong
-    <button onclick="window.location.href='memoria.html'">Memoria/Parejas
-    <button onclick="window.location.href='penaltis.html'">Tanda de Penaltis ⚽</button>
-    <button onclick="window.location.href='pollo_mutante.html'">Pollo Mutante(1 jugador)
-    <button onclick="window.location.href='pollo-mutante-vs.html'">Pollo Mutante(2 jugadores) ⚡ Power Edition</button>
+  <h1 id="saludo">Bienvenido</h1>
 
-    </button>
+<div class="buttons">
+  <button onclick="window.location.href='juegos/TresEnRaya.html'">Tres en Raya</button>
+  <button onclick="window.location.href='juegos/pong.html'">Pong</button>
+  <button onclick="window.location.href='juegos/memoria.html'">Memoria</button>
+  <button onclick="window.location.href='juegos/penaltis.html'">Penaltis</button>
+  <button onclick="window.location.href='juegos/pollo_mutante.html'">Pollo mutante</button>
+  <button onclick="window.location.href='juegos/GeometryDash.html'">Geometry Dash</button>
+  <button onclick="window.location.href='juegos/Pac-Man.html'">Pac-Man</button>
 
-    <button onclick="cerrarSesion()">Cerrar Sesión</button>
+</div>
 
-    
 
-<script>
-    function cerrarSesion() {
-        localStorage.removeItem("usuario"); // Borrar el login
-        window.location.href = "login.html"; // Volver al login
+  <button style="background:red; color:#fff;" onclick="cerrarSesion()">Cerrar Sesión</button>
+
+  <script>
+    // 1) Leer usuario de localStorage
+    const usuario = localStorage.getItem("usuario");
+    // 2) Si no existe, volver al login
+    if (!usuario) {
+      window.location.href = "login.html";
+    } else {
+      // 3) Mostrar saludo personalizado
+      document.getElementById("saludo").innerText = "¡Bienvenido, " + usuario + "!";
     }
-    
-</script>
+
+    function cerrarSesion() {
+      localStorage.removeItem("usuario");
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
