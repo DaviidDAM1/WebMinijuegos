@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #f0f4ff, #e0f7ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      height: 100vh;
+      color: #333;
+    }
+
+    h2#score {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #009688;
+    }
+
+    canvas {
+      background: #d9fdd3; /* verde claro */
+      border: 4px solid #00bcd4;
+      box-shadow: 0 0 12px rgba(0, 188, 212, 0.5);
+      border-radius: 10px;
+    }
+
+    #restartBtn {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      color: white;
+      background: #00bcd4;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 188, 212, 0.4);
+      transition: background 0.3s ease;
+    }
+
+    #restartBtn:hover {
+      background: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="score">🍎 Manzanas: 0</h2>
+  <canvas id="game" width="400" height="400"></canvas>
+  <button id="restartBtn" onclick="init()">Reiniciar</button>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake, direction, apple, gameInterval, hasStarted, score;
+
+    function init() {
+      snake = [{ x: 10, y: 10 }];
+      direction = { x: 0, y: 0 };
+      hasStarted = false;
+      score = 0;
+      document.getElementById("score").innerText = "🍎 Manzanas: 0";
+      placeApple();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(gameLoop, 100);
+    }
+
+    function placeApple() {
+      apple = {
+        x: Math.floor(Math.random() * tileCount),
+        y: Math.floor(Math.random() * tileCount),
+      };
+    }
+
+    function gameLoop() {
+      if (!hasStarted) {
+        draw();
+        return;
+      }
+
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= tileCount || head.y >= tileCount ||
+        snake.some((s) => s.x === head.x && s.y === head.y)
+      ) {
+        alert("💀 ¡Has perdido! Puntaje: " + score);
+        init();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === apple.x && head.y === apple.y) {
+        placeApple();
+        score++;
+        document.getElementById("score").innerText = "🍎 Manzanas: " + score;
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function draw() {
+      ctx.fillStyle = "#d9fdd3";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar serpiente (🐍)
+      snake.forEach((s) => {
+        ctx.font = "20px Arial";
+        ctx.fillText("🐍", s.x * gridSize + 2, s.y * gridSize + 18);
+      });
+
+      // Dibujar manzana (🍎)
+      ctx.font = "20px Arial";
+      ctx.fillText("🍎", apple.x * gridSize + 2, apple.y * gridSize + 18);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+          if (direction.y === 0) direction = { x: 0, y: -1 };
+          hasStarted = true;
+          break;
+        case "ArrowDown":
+          if (direction.y === 0) direction = { x: 0, y: 1 };
+          hasStarted = true;
+          break;
+        case "ArrowLeft":
+          if (direction.x === 0) direction = { x: -1, y: 0 };
+          hasStarted = true;
+          break;
+        case "ArrowRight":
+          if (direction.x === 0) direction = { x: 1, y: 0 };
+          hasStarted = true;
+          break;
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
+
