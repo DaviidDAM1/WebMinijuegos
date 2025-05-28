@@ -66,9 +66,8 @@
     let gameOver;
     let gameWon;
 
-    // Variables para controlar la velocidad de los enemigos
     let enemyMoveCounter = 0;
-    const enemyMoveDelay = 20; // Ajusta este número para ralentizar/frenar más los enemigos (mayor es más lento)
+    const enemyMoveDelay = 20;
 
     function resetGame() {
       map = mapTemplate.map(row => row.slice());
@@ -85,7 +84,29 @@
       document.getElementById("gameOverScreen").style.display = "none";
     }
 
-    resetGame();
+    function guardarPuntuacion(puntos, resultado) {
+      const userId = 1;    // Reemplaza por el ID real del usuario
+      const gameId = 6;    // Reemplaza por el ID real del juego Mini Pac-Man
+
+      fetch("http://localhost:3001/guardar-puntuacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          game_id: 6,
+          score: puntos,
+          resultado: resultado
+        })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Error al guardar puntuación");
+        return res.json();
+      })
+      .then(data => console.log("Puntuación guardada:", data))
+      .catch(err => console.error("Error:", err));
+    }
 
     function drawMap() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -128,63 +149,58 @@
     }
 
     function drawEnemies() {
-  enemies.forEach((e) => {
-    const x = e.x * gridSize;
-    const y = e.y * gridSize;
+      enemies.forEach((e) => {
+        const x = e.x * gridSize;
+        const y = e.y * gridSize;
 
-    // Cuerpo fantasma
-    ctx.fillStyle = e.color;
-    ctx.beginPath();
-    ctx.moveTo(x, y + gridSize);
-    ctx.lineTo(x, y + gridSize / 3);
-    ctx.quadraticCurveTo(x + gridSize / 2, y, x + gridSize, y + gridSize / 3);
-    ctx.lineTo(x + gridSize, y + gridSize);
-    // Zigzag inferior (3 picos)
-    const zigzagHeight = gridSize / 4;
-    const zigzagCount = 3;
-    const zigzagWidth = gridSize / zigzagCount;
-    for (let i = 0; i < zigzagCount; i++) {
-      const zx = x + i * zigzagWidth;
-      ctx.lineTo(zx + zigzagWidth / 2, y + gridSize - zigzagHeight);
-      ctx.lineTo(zx + zigzagWidth, y + gridSize);
+        ctx.fillStyle = e.color;
+        ctx.beginPath();
+        ctx.moveTo(x, y + gridSize);
+        ctx.lineTo(x, y + gridSize / 3);
+        ctx.quadraticCurveTo(x + gridSize / 2, y, x + gridSize, y + gridSize / 3);
+        ctx.lineTo(x + gridSize, y + gridSize);
+        const zigzagCount = 3;
+        const zigzagHeight = gridSize / 4;
+        const zigzagWidth = gridSize / zigzagCount;
+        for (let i = 0; i < zigzagCount; i++) {
+          const zx = x + i * zigzagWidth;
+          ctx.lineTo(zx + zigzagWidth / 2, y + gridSize - zigzagHeight);
+          ctx.lineTo(zx + zigzagWidth, y + gridSize);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Ojos
+        const eyeRadius = gridSize / 6;
+        const pupilRadius = eyeRadius / 2;
+        const eyeYOffset = gridSize / 4;
+        const eyeXOffset = gridSize / 4;
+
+        // Ojo izquierdo
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.ellipse(x + eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.ellipse(x + eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ojo derecho
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.ellipse(x + gridSize - eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.ellipse(x + gridSize - eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      });
     }
-    ctx.closePath();
-    ctx.fill();
-
-    // Ojos
-    const eyeRadius = gridSize / 6;
-    const pupilRadius = eyeRadius / 2;
-    const eyeYOffset = gridSize / 4;
-    const eyeXOffset = gridSize / 4;
-
-    // Ojo izquierdo
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.ellipse(x + eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.ellipse(x + eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ojo derecho
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.ellipse(x + gridSize - eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.ellipse(x + gridSize - eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
 
     function moveEnemies() {
       enemyMoveCounter++;
-      if (enemyMoveCounter < enemyMoveDelay) return; // Solo moverse cada cierto número de frames
+      if (enemyMoveCounter < enemyMoveDelay) return;
       enemyMoveCounter = 0;
 
       enemies.forEach((e) => {
@@ -192,7 +208,6 @@
         let nextY = e.y + e.dy;
 
         if (map[nextY][nextX] === "#") {
-          // Cambiar dirección aleatoria en eje x o y
           if (Math.random() < 0.5) {
             e.dx = Math.round(Math.random()) * 2 - 1;
             e.dy = 0;
@@ -220,7 +235,6 @@
     }
 
     function checkWinCondition() {
-      // Ganar si no quedan puntos ni frutas ('.' ni 'F')
       for (const row of map) {
         if (row.includes(".") || row.includes("F")) return false;
       }
@@ -278,6 +292,13 @@
       const screen = document.getElementById("gameOverScreen");
       document.getElementById("gameOverMessage").innerText = message;
       screen.style.display = "block";
+
+      // 🔥 Guardar puntuación al terminar
+      if (message.includes("ganado")) {
+        guardarPuntuacion(score, "victoria");
+      } else {
+        guardarPuntuacion(score, "derrota");
+      }
     }
 
     document.getElementById("restartBtn").addEventListener("click", () => {
@@ -286,33 +307,19 @@
     });
 
     document.addEventListener("keydown", (e) => {
-      if (gameOver || gameWon) return; // No moverse si terminó
-      if (e.key === "ArrowUp") {
-        pacman.dx = 0;
-        pacman.dy = -1;
-        moveRequested = true;
-      }
-      if (e.key === "ArrowDown") {
-        pacman.dx = 0;
-        pacman.dy = 1;
-        moveRequested = true;
-      }
-      if (e.key === "ArrowLeft") {
-        pacman.dx = -1;
-        pacman.dy = 0;
-        moveRequested = true;
-      }
-      if (e.key === "ArrowRight") {
-        pacman.dx = 1;
-        pacman.dy = 0;
-        moveRequested = true;
-      }
+      if (gameOver || gameWon) return;
+      if (e.key === "ArrowUp") { pacman.dx = 0; pacman.dy = -1; moveRequested = true; }
+      if (e.key === "ArrowDown") { pacman.dx = 0; pacman.dy = 1; moveRequested = true; }
+      if (e.key === "ArrowLeft") { pacman.dx = -1; pacman.dy = 0; moveRequested = true; }
+      if (e.key === "ArrowRight") { pacman.dx = 1; pacman.dy = 0; moveRequested = true; }
     });
 
+    resetGame();
     gameLoop();
   </script>
 </body>
 </html>
+
 
 
 

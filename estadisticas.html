@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Estadísticas de Minijuegos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    select, button {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    #estadisticas {
+      background: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ver estadísticas de tus minijuegos</h1>
+
+  <label for="juego">Selecciona un minijuego:</label>
+  <select id="juego">
+    <option value="1">Snake</option>
+    <option value="2">Tres en Raya</option>
+    <option value="3">Piedra, Papel o Tijera</option>
+    <option value="4">Penaltis de Fútbol</option>
+    <option value="5">Dino Runner</option> 
+    <option value="6">Pac-Man</option> 
+    <!-- Puedes añadir más opciones aquí -->
+  </select>
+
+  <button id="ver-estadisticas">Ver estadísticas</button>
+
+  <div id="estadisticas"></div>
+
+  <script>
+    document.getElementById("ver-estadisticas").addEventListener("click", async () => {
+      const user = JSON.parse(localStorage.getItem("usuario"));
+      const gameId = document.getElementById("juego").value;
+
+      if (!user || !user.id) {
+        alert("Debes iniciar sesión para ver tus estadísticas.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:3001/estadisticas/${user.id}/${gameId}`);
+        const data = await res.json();
+
+        const contenedor = document.getElementById("estadisticas");
+        if (!data.success || data.puntuaciones.length === 0) {
+          contenedor.innerHTML = "<p>No hay estadísticas disponibles para este juego.</p>";
+          return;
+        }
+
+        const partidas = data.puntuaciones.length;
+        const record = Math.max(...data.puntuaciones.map(p => p.score));
+        const lista = data.puntuaciones.map(p => `
+          <li>${p.score} puntos - ${new Date(p.achieved_at).toLocaleString()}</li>
+        `).join("");
+
+        contenedor.innerHTML = `
+          <h2>Estadísticas</h2>
+          <p>Partidas jugadas: ${partidas}</p>
+          <p>Récord: ${record}</p>
+          <ul>${lista}</ul>
+        `;
+      } catch (err) {
+        console.error(err);
+        alert("Hubo un error al obtener las estadísticas.");
+      }
+    });
+  </script>
+</body>
+</html>

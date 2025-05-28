@@ -109,11 +109,14 @@
   <button onclick="window.location.href='juegos/Pac-Man.html'">Pac-Man</button>
   <button onclick="window.location.href='juegos/Snake.html'">Snake</button>
   <button onclick="window.location.href='juegos/Flappy_Bird.html'">Flappy Bird</button>
+  <button onclick="window.location.href='juegos/Dino.html'">Dinosaurio</button>
 
 </div>
 
 
   <button style="background:red; color:#fff;" onclick="cerrarSesion()">Cerrar Sesión</button>
+  <button onclick="location.href='estadisticas.html'">Ver Estadísticas</button>
+
 
   <script>
     // 1) Leer usuario de localStorage
@@ -128,8 +131,10 @@
 
     function cerrarSesion() {
       localStorage.removeItem("usuario");
-      window.location.href = "index.html";
+      window.location.href = "menu.html";
     }
+
+    
   </script>
 </body>
 </html>

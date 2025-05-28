@@ -130,8 +130,31 @@
 
             if (lanzamientos === maxTiros) {
                 setTimeout(() => {
-                    resultado.innerHTML += `<br><strong>Tanda terminada.</strong><br>${goles >= 3 ? '¡Victoria!' : 'Inténtalo otra vez.'}`;
-                }, 800);
+    resultado.innerHTML += `<br><strong>Tanda terminada.</strong><br>${goles >= 3 ? '¡Victoria!' : 'Inténtalo otra vez.'}`;
+
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (usuario && usuario.id) {
+        fetch("http://localhost:3001/guardar-puntuacion", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: usuario.id,
+                game_id: 4, // ID de "Penaltis de Fútbol"
+                score: goles,
+            }),
+        }).then(res => res.json())
+          .then(data => {
+              if (!data.success) {
+                  console.error("Error al guardar puntuación:", data.message);
+              }
+          }).catch(err => console.error("Error en fetch:", err));
+    } else {
+        console.warn("Usuario no logueado: no se guardó la puntuación.");
+    }
+}, 800);
+
             }
         }
 

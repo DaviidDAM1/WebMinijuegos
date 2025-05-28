@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dino Runner 🦖</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+      color: #000;
+    }
+    canvas {
+      border: 2px solid #333;
+      background: #fff;
+    }
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+    #restart {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      display: none;
+    }
+    #nightIcon {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🦖 Dino Runner</h1>
+  <h2 id="score">Puntuación: 0</h2>
+  <canvas id="gameCanvas" width="800" height="200"></canvas>
+  <button id="restart">Reiniciar</button>
+  <div id="nightIcon">🌞</div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreText = document.getElementById("score");
+    const restartBtn = document.getElementById("restart");
+    const nightIcon = document.getElementById("nightIcon");
+
+    const dino = { x: 50, y: 150, width: 20, height: 20, vy: 0, jumping: false };
+    let obstacles = [];
+    let score = 0;
+    let gameSpeed = 4;
+    let gameOver = false;
+    let isNight = false;
+    let lastNightToggle = 0;
+
+    function drawDino() {
+      ctx.font = "20px Arial";
+      ctx.fillText("🦖", dino.x, dino.y);
+    }
+
+    function drawObstacle(obstacle) {
+      ctx.font = "20px Arial";
+      ctx.fillText(obstacle.icon, obstacle.x, obstacle.y);
+    }
+
+    function jump() {
+      if (!dino.jumping) {
+        dino.vy = -10;
+        dino.jumping = true;
+      }
+    }
+
+    function resetGame() {
+      dino.y = 150;
+      dino.vy = 0;
+      dino.jumping = false;
+      obstacles = [];
+      score = 0;
+      gameSpeed = 4;
+      gameOver = false;
+      isNight = false;
+      lastNightToggle = 0;
+      restartBtn.style.display = "none";
+      document.body.style.background = "#f4f4f4";
+      document.body.style.color = "#000";
+      canvas.style.background = "#fff";
+      nightIcon.textContent = "🌞";
+      loop();
+    }
+
+    function saveScore() {
+      const user = JSON.parse(localStorage.getItem("usuario"));
+      if (!user || !user.id) return;
+      fetch("http://localhost:3001/guardar-puntuacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          game_id: 5, // Asigna el ID correspondiente en tu base de datos
+          score: score
+        })
+      }).then(res => res.json())
+        .then(data => console.log("Puntuación guardada:", data))
+        .catch(err => console.error("Error al guardar puntuación:", err));
+    }
+
+    function loop() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar suelo
+      ctx.fillStyle = "#ccc";
+      ctx.fillRect(0, 170, canvas.width, 5);
+
+      // Gravedad
+      dino.vy += 0.5;
+      dino.y += dino.vy;
+      if (dino.y >= 150) {
+        dino.y = 150;
+        dino.vy = 0;
+        dino.jumping = false;
+      }
+
+      drawDino();
+
+      // Crear obstáculos aleatorios
+      if (Math.random() < 0.02) {
+        const spacing = 300 + Math.random() * 200;
+        if (obstacles.length === 0 || canvas.width - obstacles[obstacles.length - 1].x > spacing) {
+          const icons = ["🌵", "🪨", "🕳️"];
+          const icon = icons[Math.floor(Math.random() * icons.length)];
+          obstacles.push({ x: canvas.width, y: 150, icon });
+        }
+      }
+
+      for (let i = 0; i < obstacles.length; i++) {
+        const obs = obstacles[i];
+        obs.x -= gameSpeed;
+        drawObstacle(obs);
+
+        // Colisión
+        if (
+          dino.x < obs.x + 20 &&
+          dino.x + 20 > obs.x &&
+          dino.y < obs.y + 20 &&
+          dino.y + 20 > obs.y
+        ) {
+          gameOver = true;
+          scoreText.textContent = "💀 GAME OVER - Puntuación: " + score;
+          restartBtn.style.display = "block";
+          saveScore();
+          return;
+        }
+      }
+
+      // Limpiar obstáculos viejos
+      obstacles = obstacles.filter(o => o.x > -30);
+
+      // Aumentar velocidad
+      score++;
+      if (score % 100 === 0) gameSpeed += 0.3;
+
+      // Alternar día/noche
+      if (score % 1000 === 0 && score !== lastNightToggle) {
+        isNight = !isNight;
+        lastNightToggle = score;
+        if (isNight) {
+          document.body.style.background = "#1e1e1e";
+          document.body.style.color = "#fff";
+          canvas.style.background = "#333";
+          nightIcon.textContent = "🌙";
+        } else {
+          document.body.style.background = "#f4f4f4";
+          document.body.style.color = "#000";
+          canvas.style.background = "#fff";
+          nightIcon.textContent = "🌞";
+        }
+      }
+
+      scoreText.textContent = "Puntuación: " + score;
+
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+
+    restartBtn.addEventListener("click", resetGame);
+
+    resetGame();
+  </script>
+</body>
+</html>

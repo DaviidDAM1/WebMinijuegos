@@ -71,6 +71,49 @@ app.post("/login", (req, res) => {
   );
 });
 
+app.get("/estadisticas/:userId/:gameId", async (req, res) => {
+  const { userId, gameId } = req.params;
+
+  try {
+    const [rows] = await db.promise().execute(
+      `SELECT score, achieved_at FROM scores WHERE user_id = ? AND game_id = ? ORDER BY achieved_at DESC`,
+      [userId, gameId]
+    );
+
+    res.json({
+      success: true,
+      puntuaciones: rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Error al consultar estadísticas." });
+  }
+});
+
+app.post("/guardar-puntuacion", async (req, res) => {
+  const { user_id, game_id, score } = req.body;
+
+  if (!user_id || !game_id || score === undefined) {
+    return res.json({ success: false, message: "Datos incompletos" });
+  }
+
+  try {
+    await db
+      .promise()
+      .execute(
+        "INSERT INTO scores (user_id, game_id, score) VALUES (?, ?, ?)",
+        [user_id, game_id, score]
+      );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Error al guardar puntuación" });
+  }
+});
+
+
+
 // Arrancar servidor
 app.listen(3001, () => {
   console.log("Servidor corriendo en http://localhost:3001");
