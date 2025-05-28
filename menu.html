@@ -6,93 +6,116 @@
   <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Orbitron', sans-serif;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Orbitron', sans-serif;
+}
 
-  body {
-    background: #000;
-    background-image:
-      linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px);
-    background-size: 40px 40px;
-    color: #0ff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 100vh;
-    position: relative;
-    padding-top: 60px;
-    text-align: center;
-  }
+body {
+  background: #000;
+  background-image:
+    linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: #0ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding-top: 60px;
+  text-align: center;
+}
 
-  h1 {
-    margin-bottom: 40px;
-    font-size: 2.4em;
-    text-shadow: 0 0 8px #0ff;
-  }
+h1 {
+  margin-bottom: 20px;
+  font-size: 2.6em;
+  text-shadow: 0 0 8px #0ff;
+}
 
-  .buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 40px;
-    padding: 60px;
-    background-color: rgba(0, 255, 255, 0.05);
-    border: 2px solid #0ff;
-    border-radius: 20px;
-    box-shadow: 0 0 15px #0ff;
-    width: 80%;
-    max-width: 1200px;
-  }
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  padding: 50px;
+  background-color: rgba(0, 255, 255, 0.05);
+  border: 2px solid #0ff;
+  border-radius: 20px;
+  box-shadow: 0 0 15px #0ff;
+  width: 90%;
+  max-width: 1200px;
+}
 
-  .buttons button {
-    flex: 1 1 250px;
-    padding: 30px;
-    font-size: 22px;
-    color: #000;
-    background: #0ff;
-    border: 2px solid #0ff;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 0 8px #0ff, 0 0 15px #0ff inset;
-  }
+.buttons button {
+  height: 100px;
+  font-size: 20px;
+  color: #000;
+  background: #0ff;
+  border: 2px solid #0ff;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 0 8px #0ff, 0 0 15px #0ff inset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .buttons button:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 20px #0ff, 0 0 35px #0ff;
-  }
+.buttons button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 20px #0ff, 0 0 35px #0ff;
+}
 
-  .logout {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 18px 36px;
-    font-size: 18px;
-    color: #fff;
-    background: #ff0044;
-    border: 2px solid #ff0044;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 0 8px #ff0044, 0 0 15px #ff0044 inset;
-    z-index: 999;
-  }
+/* Botones inferiores fijos */
+.fixed-buttons {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 999;
+}
 
-  .logout:hover {
-    transform: scale(1.07);
-    box-shadow: 0 0 15px #ff0044, 0 0 30px #ff0044;
-  }
+.fixed-buttons button {
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 2px solid;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.logout {
+  background: #ff0044;
+  color: #fff;
+  border-color: #ff0044;
+  box-shadow: 0 0 8px #ff0044, 0 0 15px #ff0044 inset;
+}
+
+.logout:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 15px #ff0044, 0 0 30px #ff0044;
+}
+
+.stats {
+  background: rgb(0, 255, 30);
+  color: #000;
+  border-color: #0ff;
+  box-shadow: 0 0 8px #0ff, 0 0 15px #0ff inset;
+}
+
+.stats:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 15px #0ff, 0 0 30px #0ff;
+}
+
 </style>
 
 </head>
@@ -101,10 +124,10 @@
 
 <div class="buttons">
   <button onclick="window.location.href='juegos/TresEnRaya.html'">Tres en Raya</button>
+  <button onclick="window.location.href='juegos/PiedraPapelTijera.html'">Piedra Papel Tijera</button>
   <button onclick="window.location.href='juegos/pong.html'">Pong</button>
   <button onclick="window.location.href='juegos/memoria.html'">Memoria</button>
   <button onclick="window.location.href='juegos/penaltis.html'">Penaltis</button>
-  <button onclick="window.location.href='juegos/pollo_mutante.html'">Pollo mutante</button>
   <button onclick="window.location.href='juegos/GeometryDash.html'">Geometry Dash</button>
   <button onclick="window.location.href='juegos/Pac-Man.html'">Pac-Man</button>
   <button onclick="window.location.href='juegos/Snake.html'">Snake</button>
@@ -112,29 +135,29 @@
   <button onclick="window.location.href='juegos/Dino.html'">Dinosaurio</button>
 
 </div>
+<!-- Botones inferiores -->
+<div class="fixed-buttons">
+  <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+  <button class="stats" onclick="location.href='estadisticas.html'">Ver Estadísticas</button>
+</div>
+
+<script>
+  const usuarioData = localStorage.getItem("usuario");
+
+  if (!usuarioData) {
+    window.location.href = "login.html";
+  } else {
+    const usuario = JSON.parse(usuarioData);
+    document.getElementById("saludo").innerText = "¡Bienvenido, " + usuario.username + "!";
+  }
+
+  function cerrarSesion() {
+    localStorage.removeItem("usuario");
+    window.location.href = "index.html";
+
+  }
+</script>
 
 
-  <button style="background:red; color:#fff;" onclick="cerrarSesion()">Cerrar Sesión</button>
-  <button onclick="location.href='estadisticas.html'">Ver Estadísticas</button>
-
-
-  <script>
-    // 1) Leer usuario de localStorage
-    const usuario = localStorage.getItem("usuario");
-    // 2) Si no existe, volver al login
-    if (!usuario) {
-      window.location.href = "login.html";
-    } else {
-      // 3) Mostrar saludo personalizado
-      document.getElementById("saludo").innerText = "¡Bienvenido, " + usuario + "!";
-    }
-
-    function cerrarSesion() {
-      localStorage.removeItem("usuario");
-      window.location.href = "menu.html";
-    }
-
-    
-  </script>
 </body>
 </html>

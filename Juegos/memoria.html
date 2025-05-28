@@ -13,7 +13,13 @@
         }
 
         h1 {
-            margin: 30px 0;
+            margin: 20px 0 10px;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #4caf50;
         }
 
         .game-board {
@@ -63,25 +69,44 @@
 </head>
 <body>
     <h1>Juego de Memoria</h1>
-
+    <div class="timer" id="timer">⏱ Tiempo: 0s</div>
     <div class="game-board" id="gameBoard"></div>
 
     <div class="controls">
-        <button onclick="window.location.href='menu.html'">Volver al menú</button>
+        <button onclick="window.location.href='../menu.html'">Volver al menú</button>
     </div>
 
     <script>
         const emojis = ["🐶", "🐱", "🐸", "🐵", "🐰", "🦊", "🐼", "🐷"];
-        let cards = [...emojis, ...emojis]; // 2 de cada
-
+        let cards = [...emojis, ...emojis];
         let flippedCards = [];
         let matchedCards = [];
+        let startTime;
+        let timerInterval;
+        let failedAttempts = 0;
+        const gameId = 8;
 
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const secondsElapsed = Math.floor((now - startTime) / 1000);
+            document.getElementById("timer").innerText = `⏱ Tiempo: ${secondsElapsed}s`;
+        }
+
+        function startTimer() {
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            updateTimer(); // mostrar el tiempo final
         }
 
         function createBoard() {
@@ -99,6 +124,8 @@
 
                 board.appendChild(card);
             });
+
+            startTimer();
         }
 
         function flipCard(card) {
@@ -126,11 +153,17 @@
 
                 if (matchedCards.length === cards.length) {
                     setTimeout(() => {
-                        alert("¡Has ganado! 🧠🎉");
+                        stopTimer();
+                        const endTime = new Date();
+                        const secondsTaken = Math.floor((endTime - startTime) / 1000);
+                        const score = calcularPuntaje(secondsTaken, failedAttempts);
+                        alert(`¡Has ganado! 🧠🎉\nTiempo: ${secondsTaken}s\nPuntaje: ${score}`);
+                        guardarEstadistica(score);
                         location.reload();
                     }, 500);
                 }
             } else {
+                failedAttempts++;
                 setTimeout(() => {
                     card1.classList.remove("flipped");
                     card2.classList.remove("flipped");
@@ -140,6 +173,42 @@
                 }, 1000);
             }
         }
+
+        function calcularPuntaje(tiempo, fallos) {
+            let base = 1000;
+            let penalizacionTiempo = tiempo * 10;
+            let penalizacionFallos = fallos * 20;
+            let puntaje = base - penalizacionTiempo - penalizacionFallos;
+            return Math.max(puntaje, 0);
+        }
+
+        async function guardarEstadistica(puntuacion) {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (!usuario || !usuario.id) {
+        alert("No se pudo guardar la puntuación porque no hay sesión activa.");
+        return;
+    }
+
+    try {
+        const res = await fetch("http://localhost:3001/guardar-puntuacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: usuario.id,
+                game_id: gameId,
+                score: puntuacion
+            })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert("No se pudo guardar la puntuación.");
+        }
+    } catch (error) {
+        console.error("Error al guardar estadística:", error);
+    }
+}
+
 
         createBoard();
     </script>

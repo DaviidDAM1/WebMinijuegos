@@ -34,7 +34,7 @@
       border-radius: 10px;
     }
 
-    #restartBtn {
+    .game-button {
       margin-top: 20px;
       padding: 12px 24px;
       font-size: 18px;
@@ -47,7 +47,7 @@
       transition: background 0.3s ease;
     }
 
-    #restartBtn:hover {
+    .game-button:hover {
       background: #0097a7;
     }
   </style>
@@ -55,7 +55,9 @@
 <body>
   <h2 id="score">🍎 Manzanas: 0</h2>
   <canvas id="game" width="400" height="400"></canvas>
-  <button id="restartBtn" onclick="init()">Reiniciar</button>
+
+  <button class="game-button" onclick="init()">Reiniciar</button>
+  <button class="game-button" onclick="window.location.href='../menu.html'">Volver al menú</button>
 
   <script>
     const canvas = document.getElementById("game");
@@ -92,43 +94,42 @@
       const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
       if (
-  head.x < 0 || head.y < 0 ||
-  head.x >= tileCount || head.y >= tileCount ||
-  snake.some((s) => s.x === head.x && s.y === head.y)
-) {
-  const user = JSON.parse(localStorage.getItem("usuario"));
-  if (user && user.id) {
-    fetch("http://localhost:3001/guardar-puntuacion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        user_id: user.id,
-        game_id: 1, // ID del juego Snake
-        score: score
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        console.error("Error al guardar la puntuación:", data.message);
+        head.x < 0 || head.y < 0 ||
+        head.x >= tileCount || head.y >= tileCount ||
+        snake.some((s) => s.x === head.x && s.y === head.y)
+      ) {
+        const user = JSON.parse(localStorage.getItem("usuario"));
+        if (user && user.id) {
+          fetch("http://localhost:3001/guardar-puntuacion", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              user_id: user.id,
+              game_id: 1, // ID del juego Snake
+              score: score
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (!data.success) {
+              console.error("Error al guardar la puntuación:", data.message);
+            }
+            alert("💀 ¡Has perdido! Puntaje: " + score);
+            init();
+          })
+          .catch(err => {
+            console.error("Error en la petición:", err);
+            alert("💀 ¡Has perdido! Puntaje: " + score);
+            init();
+          });
+        } else {
+          alert("💀 ¡Has perdido! Puntaje: " + score + ". No se guardó porque no has iniciado sesión.");
+          init();
+        }
+        return;
       }
-      alert("💀 ¡Has perdido! Puntaje: " + score);
-      init();
-    })
-    .catch(err => {
-      console.error("Error en la petición:", err);
-      alert("💀 ¡Has perdido! Puntaje: " + score);
-      init();
-    });
-  } else {
-    alert("💀 ¡Has perdido! Puntaje: " + score + ". No se guardó porque no has iniciado sesión.");
-    init();
-  }
-  return;
-}
-
 
       snake.unshift(head);
 
@@ -147,13 +148,11 @@
       ctx.fillStyle = "#d9fdd3";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Dibujar serpiente (🐍)
       snake.forEach((s) => {
         ctx.font = "20px Arial";
         ctx.fillText("🐍", s.x * gridSize + 2, s.y * gridSize + 18);
       });
 
-      // Dibujar manzana (🍎)
       ctx.font = "20px Arial";
       ctx.fillText("🍎", apple.x * gridSize + 2, apple.y * gridSize + 18);
     }

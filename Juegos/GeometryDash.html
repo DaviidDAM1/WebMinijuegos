@@ -1,93 +1,125 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Mini Geometry Dash</title>
+  <meta charset="UTF-8" />
+  <title>Mini Geometry Dash Mejorado</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #111; }
-    canvas { background: #222; border: 3px solid #fff; }
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      gap: 20px;
+    }
+    canvas {
+      background: #222;
+      border: 3px solid #fff;
+      display: block;
+      box-shadow: 0 0 15px cyan;
+    }
+    .controls {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .controls button {
+      background: linear-gradient(45deg, #00ffff, #008080);
+      color: #111;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #00ffff;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .controls button:hover {
+      background: linear-gradient(45deg, #008080, #00ffff);
+      color: #fff;
+      box-shadow: 0 0 15px #00ffff, 0 0 20px #00ffff;
+      transform: scale(1.05);
+    }
+    .controls button:active {
+      transform: scale(0.95);
+      box-shadow: none;
+      background: #006666;
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
+  <div class="controls">
+    <button onclick="window.location.href='../menu.html'">Volver al menú</button>
+  </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Jugador
     const player = {
-      x: 50,
-      y: 300,
-      width: 30,
-      height: 30,
-      dy: 0,
-      gravity: 0.8,
-      jumpForce: -12,
-      isJumping: false
+      x: 50, y: 300, width: 30, height: 30, dy: 0,
+      gravity: 0.8, jumpForce: -12, isJumping: false,
+      canDoubleJump: true, isSliding: false, slideTimer: 0,
+      maxSlideTime: 25, normalHeight: 30, slideHeight: 15,
+      shield: false, shieldTimer: 0, shieldDuration: 300,
+      jumpBoost: false, jumpBoostTimer: 0, jumpBoostDuration: 300,
     };
 
-    // Obstáculos
-    const obstacles = [];
-    const obstacleTypes = ["block", "spike", "floating"];
-    const obstacleSpeed = 6;
+    const obstacles = [], powerUps = [], particles = [];
+    const obstacleSpeedBase = 6;
+    let obstacleSpeed = obstacleSpeedBase;
     let spawnTimer = 0;
-
     let gameOver = false;
+    let score = 0;
+    let scoreTimer = 0;
+    let hasScoreBeenSaved = false;
+
+    const powerUpTypes = ["shield", "jumpBoost", "slow"];
+    const powerUpSize = 25;
 
     function spawnObstacle() {
-      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-
-      if (type === "block") {
-        obstacles.push({
-          type: "block",
-          x: canvas.width,
-          y: canvas.height - 40,
-          width: 30,
-          height: 40,
-        });
-      } else if (type === "spike") {
-        obstacles.push({
-          type: "spike",
-          x: canvas.width,
-          y: canvas.height - 30,
-          width: 30,
-          height: 30,
-        });
-      } else if (type === "floating") {
-        obstacles.push({
-          type: "floating",
-          x: canvas.width,
-          y: canvas.height - 120,
-          width: 60,
-          height: 20,
-        });
+      if (Math.random() < 0.3) {
+        obstacles.push({ type: "spike", x: canvas.width, y: canvas.height - 30, width: 30, height: 30 });
+        obstacles.push({ type: "spike", x: canvas.width + 35, y: canvas.height - 30, width: 30, height: 30 });
+      } else {
+        obstacles.push({ type: "spike", x: canvas.width, y: canvas.height - 30, width: 30, height: 30 });
       }
     }
 
-    function resetGame() {
-      obstacles.length = 0;
-      player.y = 300;
-      player.dy = 0;
-      gameOver = false;
-      spawnTimer = 0;
-      loop();
+    function spawnPowerUp() {
+      if (Math.random() < 0.01) {
+        const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+        powerUps.push({ type, x: canvas.width, y: canvas.height - 60, width: powerUpSize, height: powerUpSize });
+      }
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Jugador
+    function drawPlayer() {
+      ctx.save();
+      if (player.shield) {
+        ctx.shadowColor = "cyan";
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = "aqua";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(player.x - 2, player.y - 2, player.width + 4, player.height + 4);
+      }
       ctx.fillStyle = "cyan";
       ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.restore();
+    }
 
-      // Obstáculos
+    function drawObstacles() {
       obstacles.forEach(ob => {
-        if (ob.type === "block") {
-          ctx.fillStyle = "red";
-          ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-        } else if (ob.type === "spike") {
+        if (ob.type === "spike") {
           ctx.fillStyle = "orange";
           ctx.beginPath();
           ctx.moveTo(ob.x, ob.y + ob.height);
@@ -95,77 +127,265 @@
           ctx.lineTo(ob.x + ob.width, ob.y + ob.height);
           ctx.closePath();
           ctx.fill();
-        } else if (ob.type === "floating") {
-          ctx.fillStyle = "purple";
-          ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
         }
       });
     }
 
-    function update() {
-      // Movimiento del jugador
-      player.dy += player.gravity;
-      player.y += player.dy;
+    function drawPowerUps() {
+      powerUps.forEach(pu => {
+        if (pu.type === "shield") {
+          ctx.fillStyle = "cyan";
+          ctx.beginPath();
+          ctx.arc(pu.x + pu.width/2, pu.y + pu.height/2, pu.width/2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (pu.type === "jumpBoost") {
+          ctx.fillStyle = "yellow";
+          ctx.beginPath();
+          ctx.moveTo(pu.x, pu.y + pu.height);
+          ctx.lineTo(pu.x + pu.width/2, pu.y);
+          ctx.lineTo(pu.x + pu.width, pu.y + pu.height);
+          ctx.closePath();
+          ctx.fill();
+        } else if (pu.type === "slow") {
+          ctx.fillStyle = "purple";
+          ctx.fillRect(pu.x, pu.y, pu.width, pu.height);
+        }
+      });
+    }
 
-      // Evita que caiga del suelo
+    function drawParticles() {
+      particles.forEach((p, i) => {
+        ctx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.02;
+        if (p.alpha <= 0) particles.splice(i, 1);
+      });
+    }
+
+    function createJumpParticles() {
+      for (let i = 0; i < 5; i++) {
+        particles.push({
+          x: player.x + player.width / 2,
+          y: player.y + player.height,
+          radius: 3,
+          vx: (Math.random() - 0.5) * 2,
+          vy: Math.random() * -2 - 1,
+          alpha: 1,
+        });
+      }
+    }
+
+    function createCrashParticles() {
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: player.x + player.width / 2,
+          y: player.y + player.height / 2,
+          radius: 4,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          alpha: 1,
+        });
+      }
+    }
+
+    function updatePlayer() {
+      if (!player.isSliding) player.dy += player.gravity;
+      player.y += player.dy;
       if (player.y + player.height >= canvas.height) {
         player.y = canvas.height - player.height;
         player.dy = 0;
         player.isJumping = false;
+        player.canDoubleJump = true;
       }
 
-      // Spawnear obstáculos
-      spawnTimer++;
-      if (spawnTimer > 80) {
-        spawnObstacle();
-        spawnTimer = 0;
+      if (player.isSliding) {
+        player.slideTimer++;
+        if (player.slideTimer > player.maxSlideTime) {
+          player.isSliding = false;
+          player.slideTimer = 0;
+          player.height = player.normalHeight;
+          player.y -= player.normalHeight - player.slideHeight;
+        }
       }
 
+      if (player.shield) {
+        player.shieldTimer++;
+        if (player.shieldTimer > player.shieldDuration) {
+          player.shield = false;
+          player.shieldTimer = 0;
+        }
+      }
+      if (player.jumpBoost) {
+        player.jumpBoostTimer++;
+        if (player.jumpBoostTimer > player.jumpBoostDuration) {
+          player.jumpBoost = false;
+          player.jumpBoostTimer = 0;
+        }
+      }
+    }
+
+    function updateObstacles() {
       obstacles.forEach((ob, i) => {
         ob.x -= obstacleSpeed;
-
-        // Colisión (simple AABB)
         if (
           player.x < ob.x + ob.width &&
           player.x + player.width > ob.x &&
           player.y < ob.y + ob.height &&
           player.y + player.height > ob.y
         ) {
-          gameOver = true;
+          if (player.shield) {
+            player.shield = false;
+            player.shieldTimer = 0;
+            obstacles.splice(i, 1);
+            createCrashParticles();
+          } else {
+            gameOver = true;
+            createCrashParticles();
+            if (!hasScoreBeenSaved) {
+              guardarPuntuacion(score);
+              hasScoreBeenSaved = true;
+            }
+          }
         }
-
-        // Quitar obstáculos fuera de pantalla
-        if (ob.x + ob.width < 0) {
-          obstacles.splice(i, 1);
-        }
+        if (ob.x + ob.width < 0) obstacles.splice(i, 1);
       });
+    }
+
+    function updatePowerUps() {
+      powerUps.forEach((pu, i) => {
+        pu.x -= obstacleSpeed;
+        if (
+          player.x < pu.x + pu.width &&
+          player.x + player.width > pu.x &&
+          player.y < pu.y + pu.height &&
+          player.y + player.height > pu.y
+        ) {
+          if (pu.type === "shield") player.shield = true;
+          else if (pu.type === "jumpBoost") player.jumpBoost = true;
+          else if (pu.type === "slow") {
+            obstacleSpeed = obstacleSpeedBase / 2;
+            setTimeout(() => { obstacleSpeed = obstacleSpeedBase; }, 5000);
+          }
+          powerUps.splice(i, 1);
+        }
+        if (pu.x + pu.width < 0) powerUps.splice(i, 1);
+      });
+    }
+
+    function updateDifficulty() {
+      obstacleSpeed = Math.min(obstacleSpeedBase + Math.floor(score / 100), 12);
+    }
+
+    function updateScore() {
+      scoreTimer++;
+      if (scoreTimer > 10 && !gameOver) {
+        score++;
+        scoreTimer = 0;
+      }
     }
 
     function loop() {
       if (!gameOver) {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-      } else {
-        ctx.fillStyle = "white";
-        ctx.font = "40px sans-serif";
-        ctx.fillText("Game Over", 300, 200);
-        ctx.font = "20px sans-serif";
-        ctx.fillText("Presiona espacio para reiniciar", 260, 240);
+        updatePlayer();
+        updateObstacles();
+        updatePowerUps();
+        updateDifficulty();
+        updateScore();
+        spawnTimer++;
+        if (spawnTimer > 80) {
+          spawnObstacle();
+          spawnPowerUp();
+          spawnTimer = 0;
+        }
+      }
+
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawObstacles();
+      drawPowerUps();
+      drawParticles();
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Puntuación: " + score, 10, 30);
+
+      if (gameOver) {
+        ctx.fillStyle = "red";
+        ctx.font = "50px Arial";
+        ctx.fillText("GAME OVER", 280, 180);
+        ctx.font = "20px Arial";
+        ctx.fillText("Presiona ESPACIO para reiniciar", 250, 220);
       }
     }
 
-    // Controles
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
-        if (gameOver) {
-          resetGame();
-        } else if (!player.isJumping) {
-          player.dy = player.jumpForce;
+        if (gameOver) resetGame();
+        else if (!player.isJumping) {
+          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce;
           player.isJumping = true;
+          player.canDoubleJump = true;
+          createJumpParticles();
+        } else if (player.canDoubleJump && !player.isSliding) {
+          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce;
+          player.canDoubleJump = false;
+          createJumpParticles();
+        }
+      } else if (e.code === "ArrowDown") {
+        if (!player.isJumping && !player.isSliding) {
+          player.isSliding = true;
+          player.slideTimer = 0;
+          player.height = player.slideHeight;
+          player.y += (player.normalHeight - player.slideHeight);
         }
       }
     });
+
+    function resetGame() {
+      obstacles.length = 0;
+      powerUps.length = 0;
+      particles.length = 0;
+      player.y = 300;
+      player.dy = 0;
+      player.isJumping = false;
+      player.canDoubleJump = true;
+      player.isSliding = false;
+      player.height = player.normalHeight;
+      player.shield = false;
+      player.jumpBoost = false;
+      score = 0;
+      obstacleSpeed = obstacleSpeedBase;
+      spawnTimer = 0;
+      gameOver = false;
+      hasScoreBeenSaved = false;
+    }
+
+    async function guardarPuntuacion(puntos) {
+      const usuario = JSON.parse(localStorage.getItem("usuario"));
+      if (!usuario || !usuario.id) return;
+
+      try {
+        await fetch("http://localhost:3001/guardar-puntuacion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: usuario.id,
+            gameId: 10,  // ID de Geometry Dash
+            score: puntos,
+          }),
+        });
+      } catch (err) {
+        console.error("Error al guardar puntuación:", err);
+      }
+    }
 
     loop();
   </script>

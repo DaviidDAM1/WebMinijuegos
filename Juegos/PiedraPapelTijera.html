@@ -14,7 +14,8 @@
 
     <h2 id="resultado"></h2>
 
-    <button onclick="window.location.href='menu.html'">Volver al Menú</button>
+    <button onclick="window.location.href='../menu.html'">Volver al menú</button>
+
 
     <script>
         function jugar(eleccionJugador) {
@@ -22,20 +23,50 @@
             const eleccionMaquina = opciones[Math.floor(Math.random() * 3)];
 
             let resultado = "";
+            let score = 0;
 
             if (eleccionJugador === eleccionMaquina) {
                 resultado = "¡Empate! Ambos eligieron " + eleccionJugador;
+                // score se queda en 0
             } else if (
                 (eleccionJugador === "piedra" && eleccionMaquina === "tijera") ||
                 (eleccionJugador === "papel" && eleccionMaquina === "piedra") ||
                 (eleccionJugador === "tijera" && eleccionMaquina === "papel")
             ) {
                 resultado = "¡Ganaste! " + eleccionJugador + " vence a " + eleccionMaquina;
+                score = 1;
             } else {
                 resultado = "¡Perdiste! " + eleccionMaquina + " vence a " + eleccionJugador;
+                // score se queda en 0
             }
 
             document.getElementById("resultado").innerText = resultado;
+
+            // Guardar puntuación si el usuario está logueado
+            const user = JSON.parse(localStorage.getItem("usuario"));
+            if (!user || !user.id) {
+                alert("Debes iniciar sesión para guardar tus estadísticas.");
+                return;
+            }
+
+            fetch("http://localhost:3001/guardar-puntuacion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    game_id: 3, // ID de Piedra, Papel o Tijera en la tabla `games`
+                    score: score
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error("Error al guardar puntuación:", data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error al conectar con el servidor:", err);
+            });
         }
     </script>
 </body>

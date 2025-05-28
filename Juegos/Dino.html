@@ -13,19 +13,47 @@
       margin-top: 40px;
       color: #000;
     }
+
     canvas {
       border: 2px solid #333;
       background: #fff;
     }
+
     h1, h2 {
       margin-bottom: 20px;
     }
+
     #restart {
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 20px;
       display: none;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
     }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .controls button:hover {
+      background-color: #0b7dda;
+    }
+
     #nightIcon {
       position: absolute;
       top: 10px;
@@ -39,6 +67,11 @@
   <h2 id="score">Puntuación: 0</h2>
   <canvas id="gameCanvas" width="800" height="200"></canvas>
   <button id="restart">Reiniciar</button>
+
+  <div class="controls">
+    <button onclick="window.location.href='../menu.html'">Volver al menú</button>
+  </div>
+
   <div id="nightIcon">🌞</div>
 
   <script>
@@ -99,7 +132,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: user.id,
-          game_id: 5, // Asigna el ID correspondiente en tu base de datos
+          game_id: 5,
           score: score
         })
       }).then(res => res.json())
@@ -111,12 +144,9 @@
       if (gameOver) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Dibujar suelo
       ctx.fillStyle = "#ccc";
       ctx.fillRect(0, 170, canvas.width, 5);
 
-      // Gravedad
       dino.vy += 0.5;
       dino.y += dino.vy;
       if (dino.y >= 150) {
@@ -127,7 +157,6 @@
 
       drawDino();
 
-      // Crear obstáculos aleatorios
       if (Math.random() < 0.02) {
         const spacing = 300 + Math.random() * 200;
         if (obstacles.length === 0 || canvas.width - obstacles[obstacles.length - 1].x > spacing) {
@@ -142,7 +171,6 @@
         obs.x -= gameSpeed;
         drawObstacle(obs);
 
-        // Colisión
         if (
           dino.x < obs.x + 20 &&
           dino.x + 20 > obs.x &&
@@ -157,14 +185,11 @@
         }
       }
 
-      // Limpiar obstáculos viejos
       obstacles = obstacles.filter(o => o.x > -30);
 
-      // Aumentar velocidad
       score++;
       if (score % 100 === 0) gameSpeed += 0.3;
 
-      // Alternar día/noche
       if (score % 1000 === 0 && score !== lastNightToggle) {
         isNight = !isNight;
         lastNightToggle = score;
@@ -182,7 +207,6 @@
       }
 
       scoreText.textContent = "Puntuación: " + score;
-
       requestAnimationFrame(loop);
     }
 

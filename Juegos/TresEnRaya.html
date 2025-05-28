@@ -27,20 +27,20 @@
 <body>
     <h1>Tres en Raya</h1>
 
-    <div class="tablero" id="tablero">
-        <!-- 9 casillas -->
-    </div>
+    <div class="tablero" id="tablero"></div>
 
     <h2 id="mensaje"></h2>
 
     <button onclick="reiniciar()">Reiniciar</button>
-    <button onclick="window.location.href='menu.html'">Volver al Menú</button>
+    <button onclick="window.location.href='../menu.html'">Volver al menú</button>
+
 
     <script>
         const tablero = document.getElementById("tablero");
         const mensaje = document.getElementById("mensaje");
         let turno = "X";
         let casillas = ["", "", "", "", "", "", "", "", ""];
+        let juegoTerminado = false;
 
         function dibujarTablero() {
             tablero.innerHTML = "";
@@ -54,15 +54,20 @@
         }
 
         function jugar(index) {
-            if (casillas[index] === "" && !verificarGanador()) {
+            if (casillas[index] === "" && !juegoTerminado) {
                 casillas[index] = turno;
-                turno = turno === "X" ? "O" : "X";
                 dibujarTablero();
                 const ganador = verificarGanador();
                 if (ganador) {
                     mensaje.innerText = "¡Ganó " + ganador + "!";
+                    juegoTerminado = true;
+                    guardarEstadistica(ganador === "X" ? 1 : 0); // punto solo si gana X
                 } else if (!casillas.includes("")) {
                     mensaje.innerText = "¡Empate!";
+                    juegoTerminado = true;
+                    guardarEstadistica(0); // empate = 0 puntos
+                } else {
+                    turno = turno === "X" ? "O" : "X";
                 }
             }
         }
@@ -86,8 +91,36 @@
         function reiniciar() {
             casillas = ["", "", "", "", "", "", "", "", ""];
             turno = "X";
+            juegoTerminado = false;
             mensaje.innerText = "";
             dibujarTablero();
+        }
+
+        function guardarEstadistica(puntos) {
+            const user = JSON.parse(localStorage.getItem("usuario"));
+            if (!user || !user.id) {
+                alert("Debes iniciar sesión para guardar tus estadísticas.");
+                return;
+            }
+
+            fetch("http://localhost:3001/guardar-puntuacion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    game_id: 2, // ID de Tres en Raya
+                    score: puntos
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error("Error al guardar puntuación:", data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error al conectar con el servidor:", err);
+            });
         }
 
         dibujarTablero();

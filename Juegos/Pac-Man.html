@@ -15,28 +15,66 @@
       color: white;
       font-family: sans-serif;
     }
+
     canvas {
       border: 3px solid #fff;
       background: #111;
     }
+
     #gameOverScreen {
       display: none;
       margin-top: 20px;
       text-align: center;
     }
+
     #gameOverScreen button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
       margin-top: 10px;
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 188, 212, 0.4);
+      transition: background 0.3s ease;
+    }
+
+    #gameOverScreen button:hover {
+      background-color: #0097a7;
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 188, 212, 0.4);
+      transition: background 0.3s ease;
+    }
+
+    .controls button:hover {
+      background-color: #0097a7;
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="400" height="400"></canvas>
+
   <div id="gameOverScreen">
     <h2 id="gameOverMessage"></h2>
     <button id="restartBtn">Reiniciar Juego</button>
+  </div>
+
+  <div class="controls">
+    <button onclick="window.location.href='../menu.html'">Volver al menú</button>
   </div>
 
   <script>
@@ -44,16 +82,16 @@
     const ctx = canvas.getContext("2d");
     const gridSize = 20;
 
-    const mapTemplate = [
+    const baseMap = [
       "####################",
       "#........##........#",
       "#.####.#.##.#.####.#",
-      "#.#  #.#....#.##  #.#",
+      "#.#............###.#",
       "#.####.######.####.#",
       "#....F........F....#",
       "#.####.######.####.#",
-      "#....#........#....#",
-      "####.#.######.#.####",
+      "#.#..............#.#",
+      "####.#.######.######",
       "#........P.........#",
       "####################",
     ];
@@ -69,8 +107,17 @@
     let enemyMoveCounter = 0;
     const enemyMoveDelay = 20;
 
+    function generateInitialMap() {
+      return baseMap.map(row =>
+        row.split("").map(cell => {
+          if (cell === "." && Math.random() < 0.5) return " ";
+          return cell;
+        }).join("")
+      );
+    }
+
     function resetGame() {
-      map = mapTemplate.map(row => row.slice());
+      map = generateInitialMap();
       pacman = { x: 9, y: 9, dx: 0, dy: 0 };
       enemies = [
         { x: 1, y: 1, dx: 1, dy: 0, color: "red" },
@@ -85,27 +132,25 @@
     }
 
     function guardarPuntuacion(puntos, resultado) {
-      const userId = 1;    // Reemplaza por el ID real del usuario
-      const gameId = 6;    // Reemplaza por el ID real del juego Mini Pac-Man
+      const user = JSON.parse(localStorage.getItem("usuario"));
+      if (!user || !user.id) {
+        console.warn("Usuario no autenticado. No se puede guardar la puntuación.");
+        return;
+      }
 
       fetch("http://localhost:3001/guardar-puntuacion", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userId,
-          game_id: 6,
+          user_id: user.id,
+          game_id: 6, // ID de Pac-Man
           score: puntos,
           resultado: resultado
         })
       })
-      .then(res => {
-        if (!res.ok) throw new Error("Error al guardar puntuación");
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => console.log("Puntuación guardada:", data))
-      .catch(err => console.error("Error:", err));
+      .catch(err => console.error("Error al guardar puntuación:", err));
     }
 
     function drawMap() {
@@ -152,7 +197,6 @@
       enemies.forEach((e) => {
         const x = e.x * gridSize;
         const y = e.y * gridSize;
-
         ctx.fillStyle = e.color;
         ctx.beginPath();
         ctx.moveTo(x, y + gridSize);
@@ -170,13 +214,11 @@
         ctx.closePath();
         ctx.fill();
 
-        // Ojos
         const eyeRadius = gridSize / 6;
         const pupilRadius = eyeRadius / 2;
         const eyeYOffset = gridSize / 4;
         const eyeXOffset = gridSize / 4;
 
-        // Ojo izquierdo
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.ellipse(x + eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
@@ -186,7 +228,6 @@
         ctx.ellipse(x + eyeXOffset + pupilRadius / 2, y + eyeYOffset, pupilRadius, pupilRadius * 1.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Ojo derecho
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.ellipse(x + gridSize - eyeXOffset, y + eyeYOffset, eyeRadius, eyeRadius * 1.2, 0, 0, Math.PI * 2);
@@ -203,26 +244,32 @@
       if (enemyMoveCounter < enemyMoveDelay) return;
       enemyMoveCounter = 0;
 
-      enemies.forEach((e) => {
-        let nextX = e.x + e.dx;
-        let nextY = e.y + e.dy;
+      enemies.forEach(e => {
+        const directions = [
+          { dx: 0, dy: -1 },
+          { dx: 0, dy: 1 },
+          { dx: -1, dy: 0 },
+          { dx: 1, dy: 0 },
+        ];
 
-        if (map[nextY][nextX] === "#") {
-          if (Math.random() < 0.5) {
-            e.dx = Math.round(Math.random()) * 2 - 1;
-            e.dy = 0;
-          } else {
-            e.dx = 0;
-            e.dy = Math.round(Math.random()) * 2 - 1;
+        let bestMove = { dx: 0, dy: 0 };
+        let minDistance = Infinity;
+
+        directions.forEach(d => {
+          const nx = e.x + d.dx;
+          const ny = e.y + d.dy;
+
+          if (map[ny][nx] !== "#") {
+            const dist = Math.abs(pacman.x - nx) + Math.abs(pacman.y - ny);
+            if (dist < minDistance) {
+              minDistance = dist;
+              bestMove = d;
+            }
           }
-          nextX = e.x + e.dx;
-          nextY = e.y + e.dy;
-        }
+        });
 
-        if (map[nextY][nextX] !== "#") {
-          e.x = nextX;
-          e.y = nextY;
-        }
+        e.x += bestMove.dx;
+        e.y += bestMove.dy;
       });
     }
 
@@ -240,6 +287,16 @@
       }
       gameWon = true;
       return true;
+    }
+
+    function regenerateDots() {
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          if (map[y][x] === " " && Math.random() < 0.1) {
+            map[y] = map[y].substring(0, x) + "." + map[y].substring(x + 1);
+          }
+        }
+      }
     }
 
     function update() {
@@ -263,7 +320,7 @@
 
       moveEnemies();
       checkCollisions();
-      checkWinCondition();
+      if (checkWinCondition()) regenerateDots();
     }
 
     function gameLoop() {
@@ -293,12 +350,7 @@
       document.getElementById("gameOverMessage").innerText = message;
       screen.style.display = "block";
 
-      // 🔥 Guardar puntuación al terminar
-      if (message.includes("ganado")) {
-        guardarPuntuacion(score, "victoria");
-      } else {
-        guardarPuntuacion(score, "derrota");
-      }
+      guardarPuntuacion(score, message.includes("ganado") ? "victoria" : "derrota");
     }
 
     document.getElementById("restartBtn").addEventListener("click", () => {
@@ -319,7 +371,3 @@
   </script>
 </body>
 </html>
-
-
-
-
