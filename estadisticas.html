@@ -46,36 +46,20 @@ select, button {
   border-radius: 12px;
   border: 2px solid #0ff;
   outline: none;
-  box-shadow:
-    0 0 10px #0ff,
-    inset 0 0 15px #0ff;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+  box-shadow: 0 0 10px #0ff, inset 0 0 15px #0ff;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
   width: 260px;
-  background-color: #000;
-  color: #0ff;
+  background-color: #0ff; /* Cambiado: fondo cian */
+  color: #000;            /* Cambiado: texto negro */
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
 
-select:hover, select:focus {
-  background-color: #0ff;
-  color: #000;
-  box-shadow:
-    0 0 20px #0ff,
-    inset 0 0 30px #0ff;
-}
-
-button {
-  font-weight: 700;
-}
-
-button:hover {
-  background-color: #0ff;
-  color: #000;
-  box-shadow:
-    0 0 25px #0ff,
-    inset 0 0 40px #0ff;
+select:hover, select:focus,
+button:hover:not(#volver-menu) {
+  background-color: #00f0f0;
+  box-shadow: 0 0 20px #0ff, inset 0 0 30px #0ff;
   transform: scale(1.05);
 }
 
@@ -89,7 +73,6 @@ button:hover {
   margin-top: 40px;
   text-align: left;
   color: #0ff;
-  overflow-wrap: break-word;
 }
 
 #estadisticas h2 {
@@ -127,56 +110,33 @@ button:hover {
   border-bottom: none;
 }
 
-/* Botón volver al menú */
+/* Botón Volver al Menú - estilo DIFERENTE */
 
 #volver-menu {
   margin-top: 40px;
   padding: 14px 36px;
   font-size: 1.2rem;
-  background: transparent;
-  border: 2px solid #0ff;
-  color: #0ff;
+  background-color: #ff00aa; /* Diferente color: magenta */
+  color: #fff;
+  border: 2px solid #ff00aa;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 220px;
+  width: 260px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  box-shadow:
-    0 0 10px #0ff;
+  box-shadow: 0 0 15px #ff00aa, inset 0 0 20px #ff00aa;
   position: relative;
   overflow: hidden;
 }
 
-#volver-menu::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at center, rgba(0,255,255,0.3), transparent 70%);
-  animation: glow 4s linear infinite;
-  pointer-events: none;
-  border-radius: 20px;
-  z-index: 0;
-}
-
-@keyframes glow {
-  0% { transform: rotate(0deg);}
-  100% { transform: rotate(360deg);}
-}
-
 #volver-menu:hover {
-  background-color: #0ff;
-  color: #000;
-  box-shadow:
-    0 0 25px #0ff,
-    inset 0 0 40px #0ff;
+  background-color: #ff33bb;
+  box-shadow: 0 0 25px #ff00aa, inset 0 0 35px #ff00aa;
   transform: scale(1.1);
-  z-index: 1;
 }
+
 
 
   </style>
