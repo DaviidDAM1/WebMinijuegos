@@ -1,157 +1,225 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Pong</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        canvas {
-            background: #000;
-            display: block;
-            margin: 40px auto;
-            border: 5px solid #fff;
-            border-radius: 12px;
-        }
+  <meta charset="UTF-8" />
+  <title>Pong Mejorado</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-        .controls {
-            text-align: center;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', sans-serif;
+    }
 
-        .controls button {
-            margin-top: 20px;
-        }
-    </style>
+    body {
+      background: #000;
+      color: #0ff;
+      text-align: center;
+      padding-top: 30px;
+    }
+
+    canvas {
+      background: #000;
+      display: block;
+      margin: 40px auto;
+      border: 5px solid #fff;
+      border-radius: 12px;
+    }
+
+    .controls button {
+      margin-top: 20px;
+      background: #0ff;
+      color: #000;
+      border: 2px solid #0ff;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-family: 'Orbitron', sans-serif;
+      border-radius: 10px;
+      box-shadow: 0 0 12px #0ff;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .controls button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px #0ff;
+    }
+  </style>
 </head>
 <body>
-    <h1>Pong</h1>
+  <h1>Pong</h1>
+  <canvas id="pongCanvas" width="700" height="400"></canvas>
+  <div class="controls">
+    <button onclick="window.location.href='../menu.html'">Volver al menu</button>
+  </div>
 
-    <canvas id="pongCanvas" width="700" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("pongCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <div class="controls">
-        <button onclick="window.location.href='../menu.html'">Volver al menú</button>
-    </div>
+    const paddleHeight = 80, paddleWidth = 10;
+    const ballRadius = 10;
 
-    <script>
-        const canvas = document.getElementById("pongCanvas");
-        const ctx = canvas.getContext("2d");
+    let playerY = canvas.height / 2 - paddleHeight / 2;
+    let aiY = canvas.height / 2 - paddleHeight / 2;
 
-        // Elementos
-        const paddleHeight = 80, paddleWidth = 10;
-        const ballRadius = 10;
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballSpeedX = 4;
+    let ballSpeedY = 4;
 
-        let playerY = canvas.height / 2 - paddleHeight / 2;
-        let aiY = canvas.height / 2 - paddleHeight / 2;
+    let playerScore = 0;
+    let aiScore = 0;
 
-        let ballX = canvas.width / 2;
-        let ballY = canvas.height / 2;
-        let ballSpeedX = 4;
-        let ballSpeedY = 4;
+    let mensaje = "";
+    let mensajeTimer = 0;
+    let hitCount = 0;
+    let juegoTerminado = false;
 
-        let playerScore = 0;
-        let aiScore = 0;
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
 
-        function drawRect(x, y, w, h, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawText(text, x, y) {
+      ctx.fillStyle = "#fff";
+      ctx.font = "30px Orbitron";
+      ctx.fillText(text, x, y);
+    }
+
+    function drawNet() {
+      for (let i = 0; i <= canvas.height; i += 20) {
+        drawRect(canvas.width / 2 - 1, i, 2, 10, "#fff");
+      }
+    }
+
+    function render() {
+      drawRect(0, 0, canvas.width, canvas.height, "#000");
+      drawNet();
+      drawText(playerScore, canvas.width / 4, 30);
+      drawText(aiScore, canvas.width * 3 / 4, 30);
+      drawRect(10, playerY, paddleWidth, paddleHeight, "#fff");
+      drawRect(canvas.width - 20, aiY, paddleWidth, paddleHeight, "#fff");
+      drawCircle(ballX, ballY, ballRadius, "#fff");
+
+      if (mensajeTimer > 0) {
+        drawText(mensaje, canvas.width / 2 - 120, canvas.height / 2);
+        mensajeTimer--;
+      }
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballSpeedX = -ballSpeedX;
+      ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
+      hitCount = 0;
+    }
+
+    function update() {
+      if (juegoTerminado) return;
+
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+        ballSpeedY = -ballSpeedY;
+      }
+
+      let aiCenter = aiY + paddleHeight / 2;
+      let aiError = Math.random() * 30 - 15;
+      aiY += ((ballY - aiY - paddleHeight / 2 + aiError) * 0.1);
+
+      if (ballX - ballRadius < 20 && ballY > playerY && ballY < playerY + paddleHeight) {
+        hitCount++;
+        const relativeIntersectY = (playerY + paddleHeight / 2) - ballY;
+        const normalized = relativeIntersectY / (paddleHeight / 2);
+        const bounceAngle = normalized * Math.PI / 4;
+        const speed = 5 + hitCount * 0.5;
+        ballSpeedX = speed * Math.cos(bounceAngle);
+        ballSpeedY = -speed * Math.sin(bounceAngle);
+      }
+
+      if (ballX + ballRadius > canvas.width - 20 && ballY > aiY && ballY < aiY + paddleHeight) {
+        ballSpeedX = -ballSpeedX;
+      }
+
+      if (ballX - ballRadius < 0) {
+        aiScore++;
+        mensaje = "¡Punto para la IA!";
+        mensajeTimer = 60;
+        resetBall();
+      } else if (ballX + ballRadius > canvas.width) {
+        playerScore++;
+        mensaje = "¡Punto para ti!";
+        mensajeTimer = 60;
+        resetBall();
+      }
+
+      // Final del juego (gana quien llegue a 5 puntos)
+      if (playerScore >= 5 || aiScore >= 5) {
+        juegoTerminado = true;
+        mensaje = playerScore >= 5 ? "¡Has ganado!" : "¡Perdiste!";
+        mensajeTimer = 180;
+        guardarPuntuacion(playerScore);
+        setTimeout(() => {
+          playerScore = 0;
+          aiScore = 0;
+          juegoTerminado = false;
+        }, 3000);
+      }
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    canvas.addEventListener("mousemove", function(evt) {
+      let rect = canvas.getBoundingClientRect();
+      playerY = evt.clientY - rect.top - paddleHeight / 2;
+    });
+
+    function guardarPuntuacion(score) {
+      const usuario = JSON.parse(localStorage.getItem("usuario"));
+      if (!usuario || !usuario.id) return;
+
+      fetch("http://localhost:3001/guardar-puntuacion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: usuario.id,
+          game_id: 9, // ID del juego Pong
+          score: score
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          console.log("Puntuación guardada con éxito");
+        } else {
+          console.error("Error al guardar puntuación:", data.message);
         }
+      })
+      .catch(err => {
+        console.error("Error en la petición:", err);
+      });
+    }
 
-        function drawCircle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        function drawText(text, x, y) {
-            ctx.fillStyle = "#fff";
-            ctx.font = "30px Arial";
-            ctx.fillText(text, x, y);
-        }
-
-        function drawNet() {
-            for (let i = 0; i <= canvas.height; i += 20) {
-                drawRect(canvas.width / 2 - 1, i, 2, 10, "#fff");
-            }
-        }
-
-        function render() {
-            drawRect(0, 0, canvas.width, canvas.height, "#000");
-            drawNet();
-            drawText(playerScore, canvas.width / 4, 30);
-            drawText(aiScore, canvas.width * 3 / 4, 30);
-
-            drawRect(10, playerY, paddleWidth, paddleHeight, "#fff"); // Jugador
-            drawRect(canvas.width - 20, aiY, paddleWidth, paddleHeight, "#fff"); // AI
-
-            drawCircle(ballX, ballY, ballRadius, "#fff");
-        }
-
-        function resetBall() {
-            ballX = canvas.width / 2;
-            ballY = canvas.height / 2;
-            ballSpeedX = -ballSpeedX;
-            ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
-        }
-
-        function update() {
-            ballX += ballSpeedX;
-            ballY += ballSpeedY;
-
-            // Rebotar en la parte superior e inferior
-            if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
-                ballSpeedY = -ballSpeedY;
-            }
-
-            // Movimiento AI simple
-            let aiCenter = aiY + paddleHeight / 2;
-            if (aiCenter < ballY - 35) {
-                aiY += 4;
-            } else if (aiCenter > ballY + 35) {
-                aiY -= 4;
-            }
-
-            // Colisión con jugador
-            if (
-                ballX - ballRadius < 20 &&
-                ballY > playerY &&
-                ballY < playerY + paddleHeight
-            ) {
-                ballSpeedX = -ballSpeedX;
-            }
-
-            // Colisión con AI
-            if (
-                ballX + ballRadius > canvas.width - 20 &&
-                ballY > aiY &&
-                ballY < aiY + paddleHeight
-            ) {
-                ballSpeedX = -ballSpeedX;
-            }
-
-            // Puntos
-            if (ballX - ballRadius < 0) {
-                aiScore++;
-                resetBall();
-            } else if (ballX + ballRadius > canvas.width) {
-                playerScore++;
-                resetBall();
-            }
-        }
-
-        function gameLoop() {
-            update();
-            render();
-        }
-
-        // Control con el mouse
-        canvas.addEventListener("mousemove", function(evt) {
-            let rect = canvas.getBoundingClientRect();
-            playerY = evt.clientY - rect.top - paddleHeight / 2;
-        });
-
-        // Iniciar bucle de juego
-        setInterval(gameLoop, 1000 / 60); // 60 FPS
-    </script>
+    gameLoop();
+  </script>
 </body>
 </html>

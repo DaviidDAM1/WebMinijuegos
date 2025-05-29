@@ -88,16 +88,16 @@
     const powerUpSize = 25;
 
     function spawnObstacle() {
-      if (Math.random() < 0.3) {
+      if (Math.random() < 0.3) { // 30% chance for a double spike
         obstacles.push({ type: "spike", x: canvas.width, y: canvas.height - 30, width: 30, height: 30 });
         obstacles.push({ type: "spike", x: canvas.width + 35, y: canvas.height - 30, width: 30, height: 30 });
-      } else {
+      } else { // 70% chance for a single spike
         obstacles.push({ type: "spike", x: canvas.width, y: canvas.height - 30, width: 30, height: 30 });
       }
     }
 
     function spawnPowerUp() {
-      if (Math.random() < 0.01) {
+      if (Math.random() < 0.01) { // 1% chance to spawn a power-up
         const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
         powerUps.push({ type, x: canvas.width, y: canvas.height - 60, width: powerUpSize, height: powerUpSize });
       }
@@ -208,7 +208,7 @@
           player.isSliding = false;
           player.slideTimer = 0;
           player.height = player.normalHeight;
-          player.y -= player.normalHeight - player.slideHeight;
+          player.y -= player.normalHeight - player.slideHeight; // Adjust player Y position back
         }
       }
 
@@ -240,11 +240,11 @@
           if (player.shield) {
             player.shield = false;
             player.shieldTimer = 0;
-            obstacles.splice(i, 1);
-            createCrashParticles();
+            obstacles.splice(i, 1); // Remove obstacle if shielded
+            createCrashParticles(); // Particles when shield protects
           } else {
             gameOver = true;
-            createCrashParticles();
+            createCrashParticles(); // Particles when player crashes
             if (!hasScoreBeenSaved) {
               guardarPuntuacion(score);
               hasScoreBeenSaved = true;
@@ -267,22 +267,23 @@
           if (pu.type === "shield") player.shield = true;
           else if (pu.type === "jumpBoost") player.jumpBoost = true;
           else if (pu.type === "slow") {
-            obstacleSpeed = obstacleSpeedBase / 2;
+            obstacleSpeed = obstacleSpeedBase / 2; // Half speed for 5 seconds
             setTimeout(() => { obstacleSpeed = obstacleSpeedBase; }, 5000);
           }
-          powerUps.splice(i, 1);
+          powerUps.splice(i, 1); // Remove power-up after collision
         }
         if (pu.x + pu.width < 0) powerUps.splice(i, 1);
       });
     }
 
     function updateDifficulty() {
+      // Increase speed every 100 points, up to a max of 12
       obstacleSpeed = Math.min(obstacleSpeedBase + Math.floor(score / 100), 12);
     }
 
     function updateScore() {
       scoreTimer++;
-      if (scoreTimer > 10 && !gameOver) {
+      if (scoreTimer > 10 && !gameOver) { // Increase score every 10 frames
         score++;
         scoreTimer = 0;
       }
@@ -296,7 +297,7 @@
         updateDifficulty();
         updateScore();
         spawnTimer++;
-        if (spawnTimer > 80) {
+        if (spawnTimer > 80) { // Adjust obstacle spawn rate
           spawnObstacle();
           spawnPowerUp();
           spawnTimer = 0;
@@ -330,12 +331,12 @@
       if (e.code === "Space") {
         if (gameOver) resetGame();
         else if (!player.isJumping) {
-          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce;
+          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce; // Apply jump boost
           player.isJumping = true;
-          player.canDoubleJump = true;
+          player.canDoubleJump = true; // Reset double jump on first jump from ground
           createJumpParticles();
         } else if (player.canDoubleJump && !player.isSliding) {
-          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce;
+          player.dy = player.jumpBoost ? player.jumpForce * 1.4 : player.jumpForce; // Apply jump boost
           player.canDoubleJump = false;
           createJumpParticles();
         }
@@ -344,7 +345,7 @@
           player.isSliding = true;
           player.slideTimer = 0;
           player.height = player.slideHeight;
-          player.y += (player.normalHeight - player.slideHeight);
+          player.y += (player.normalHeight - player.slideHeight); // Adjust player Y position for slide
         }
       }
     });
@@ -358,32 +359,41 @@
       player.isJumping = false;
       player.canDoubleJump = true;
       player.isSliding = false;
-      player.height = player.normalHeight;
-      player.shield = false;
-      player.jumpBoost = false;
+      player.height = player.normalHeight; // Reset player height
+      player.shield = false; // Reset shield status
+      player.jumpBoost = false; // Reset jump boost status
       score = 0;
       obstacleSpeed = obstacleSpeedBase;
       spawnTimer = 0;
       gameOver = false;
-      hasScoreBeenSaved = false;
+      hasScoreBeenSaved = false; // Allow score to be saved again
     }
 
     async function guardarPuntuacion(puntos) {
       const usuario = JSON.parse(localStorage.getItem("usuario"));
-      if (!usuario || !usuario.id) return;
+      if (!usuario || !usuario.id) {
+        console.warn("No hay usuario logueado o ID de usuario no disponible. La puntuación no se guardará.");
+        return;
+      }
 
       try {
-        await fetch("http://localhost:3001/guardar-puntuacion", {
+        const res = await fetch("http://localhost:3001/guardar-puntuacion", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: usuario.id,
-            gameId: 10,  // ID de Geometry Dash
+            user_id: usuario.id, // Cambiado de 'userId' a 'user_id' para coincidir con el backend
+            game_id: 10,         // ID de Geometry Dash
             score: puntos,
           }),
         });
+        const data = await res.json();
+        if (data.success) {
+          console.log("Puntuación guardada con éxito.");
+        } else {
+          console.error("Error al guardar puntuación en el backend:", data.message);
+        }
       } catch (err) {
-        console.error("Error al guardar puntuación:", err);
+        console.error("Error de conexión al guardar puntuación:", err);
       }
     }
 
