@@ -4,6 +4,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());

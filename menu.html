@@ -37,40 +37,59 @@ h1 {
 
 .buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 30px;
-  padding: 50px;
+  grid-template-columns: repeat(5, 1fr); /* 5 columnas fijas */
+  gap: 60px 30px; /* 60px entre filas, 30px entre columnas */
+  padding: 40px;
   background-color: rgba(0, 255, 255, 0.05);
   border: 2px solid #0ff;
   border-radius: 20px;
   box-shadow: 0 0 15px #0ff;
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
+  justify-items: center;
 }
 
 .buttons button {
+  width: 100%;
+  max-width: 200px;
   height: 100px;
-  font-size: 20px;
+  font-size: 18px;
   color: #000;
   background: #0ff;
   border: 2px solid #0ff;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 0 8px #0ff, 0 0 15px #0ff inset;
+  box-shadow: 0 0 10px #0ff, 0 0 15px #0ff inset;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
 }
 
 .buttons button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 20px #0ff, 0 0 35px #0ff;
+  transform: scale(1.06);
+  box-shadow: 0 0 20px #0ff, 0 0 30px #0ff;
 }
 
-/* Botones inferiores fijos */
+/* Mensaje motivador */
+.mensaje {
+  margin-top: 30px;
+  margin-bottom: 80px;
+  font-size: 1.4em;
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+  animation: parpadeo 2s infinite;
+}
+
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Botones inferiores */
 .fixed-buttons {
   position: fixed;
   bottom: 20px;
@@ -115,50 +134,45 @@ h1 {
   transform: scale(1.07);
   box-shadow: 0 0 15px #0ff, 0 0 30px #0ff;
 }
-
 </style>
-
 </head>
 <body>
   <h1 id="saludo">Bienvenido</h1>
 
-<div class="buttons">
-  <button onclick="window.location.href='juegos/TresEnRaya.html'">Tres en Raya</button>
-  <button onclick="window.location.href='juegos/PiedraPapelTijera.html'">Piedra Papel Tijera</button>
-  <button onclick="window.location.href='juegos/pong.html'">Pong</button>
-  <button onclick="window.location.href='juegos/memoria.html'">Memoria</button>
-  <button onclick="window.location.href='juegos/penaltis.html'">Penaltis</button>
-  <button onclick="window.location.href='juegos/GeometryDash.html'">Geometry Dash</button>
-  <button onclick="window.location.href='juegos/Pac-Man.html'">Pac-Man</button>
-  <button onclick="window.location.href='juegos/Snake.html'">Snake</button>
-  <button onclick="window.location.href='juegos/Flappy_Bird.html'">Flappy Bird</button>
-  <button onclick="window.location.href='juegos/Dino.html'">Dinosaurio</button>
+  <div class="buttons">
+    <button onclick="window.location.href='juegos/TresEnRaya.html'">Tres en Raya</button>
+    <button onclick="window.location.href='juegos/PiedraPapelTijera.html'">Piedra Papel Tijera</button>
+    <button onclick="window.location.href='juegos/pong.html'">Pong</button>
+    <button onclick="window.location.href='juegos/memoria.html'">Memoria</button>
+    <button onclick="window.location.href='juegos/penaltis.html'">Penaltis</button>
+    <button onclick="window.location.href='juegos/GeometryDash.html'">Geometry Dash</button>
+    <button onclick="window.location.href='juegos/Pac-Man.html'">Pac-Man</button>
+    <button onclick="window.location.href='juegos/Snake.html'">Snake</button>
+    <button onclick="window.location.href='juegos/Flappy_Bird.html'">Flappy Bird</button>
+    <button onclick="window.location.href='juegos/Dino.html'">Dinosaurio</button>
+  </div>
 
-</div>
-<!-- Botones inferiores -->
-<div class="fixed-buttons">
-  
-  <button class="stats" onclick="location.href='estadisticas.html'">Ver Estadísticas</button>
-  <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
-</div>
+  <p class="mensaje">¡Elige un minijuego y diviértete! 🎮</p>
 
-<script>
-  const usuarioData = localStorage.getItem("usuario");
+  <div class="fixed-buttons">
+    <button class="stats" onclick="location.href='estadisticas.html'">Ver Estadísticas</button>
+    <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+  </div>
 
-  if (!usuarioData) {
-    window.location.href = "login.html";
-  } else {
-    const usuario = JSON.parse(usuarioData);
-    document.getElementById("saludo").innerText = "¡Bienvenido, " + usuario.username + "!";
-  }
+  <script>
+    const usuarioData = localStorage.getItem("usuario");
 
-  function cerrarSesion() {
-    localStorage.removeItem("usuario");
-    window.location.href = "index.html";
+    if (!usuarioData) {
+      window.location.href = "login.html";
+    } else {
+      const usuario = JSON.parse(usuarioData);
+      document.getElementById("saludo").innerText = "¡Bienvenido, " + usuario.username + "!";
+    }
 
-  }
-</script>
-
-
+    function cerrarSesion() {
+      localStorage.removeItem("usuario");
+      window.location.href = "index.html";
+    }
+  </script>
 </body>
 </html>
